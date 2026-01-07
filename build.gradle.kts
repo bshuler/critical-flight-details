@@ -1,23 +1,14 @@
+import gg.meza.stonecraft.mod
+
 plugins {
     id("gg.meza.stonecraft")
-}
-
-modSettings {
-
-    // This is a client-side only mod
-    clientSideOnly = true
-
-    // Mixin configuration
-    mixins {
-        add("flight_display.mixins.json")
-    }
 }
 
 // Publishing configuration for CurseForge and Modrinth
 publishMods {
     modrinth {
         // Fabric requires Fabric API
-        if (isFabric) {
+        if (mod.isFabric) {
             requires("fabric-api")
         }
     }
@@ -25,7 +16,7 @@ publishMods {
         clientRequired = true
         serverRequired = false
         // Fabric requires Fabric API
-        if (isFabric) {
+        if (mod.isFabric) {
             requires("fabric-api")
         }
     }
