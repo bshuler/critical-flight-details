@@ -1,3 +1,4 @@
+//? if fabric {
 package net.critical.flight_display.mixin;
 
 import net.critical.flight_display.hud.FlightDisplayHud;
@@ -26,14 +27,21 @@ public abstract class InGameHudMixin {
     private MinecraftClient client;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(MinecraftClient client, CallbackInfo ci) {
+    private void flight_display$onInit(MinecraftClient client, CallbackInfo ci) {
         this.flightDisplayHud = new FlightDisplayHud(client);
     }
 
     @Inject(method = "render", at = @At("TAIL"))
-    private void onRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+    private void flight_display$onRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (client.player != null && client.player.isFallFlying()) {
             flightDisplayHud.render(context);
         }
     }
 }
+//?} else {
+/*
+// This file is only used by Fabric. NeoForge uses event handlers instead.
+// See NeoForgeHudRenderer.java for the NeoForge implementation.
+package net.critical.flight_display.mixin;
+public abstract class InGameHudMixin {}
+*///?}

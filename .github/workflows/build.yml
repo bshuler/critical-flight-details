@@ -29,14 +29,21 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x ./gradlew
 
-    - name: Build with Gradle
-      run: ./gradlew build
+    - name: Build all versions (Stonecutter)
+      run: ./gradlew chiseledBuild
 
-    - name: Upload build artifacts
+    - name: Upload Fabric artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: mod-jar
-        path: build/libs/*.jar
+        name: fabric-jars
+        path: versions/*-fabric/build/libs/*.jar
+        retention-days: 7
+
+    - name: Upload NeoForge artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: neoforge-jars
+        path: versions/*-neoforge/build/libs/*.jar
         retention-days: 7
 
   test:

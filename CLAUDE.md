@@ -2,12 +2,31 @@
 
 ## Project Overview
 
-**Critical Flight Display** is a Minecraft Fabric mod that enhances the game's HUD with flight information while using an Elytra. The mod is client-side only and displays:
+**Critical Flight Display** is a multi-loader Minecraft mod that enhances the game's HUD with flight information while using an Elytra. The mod is client-side only and displays:
 - Pitch indicator with visual horizon lines
 - Speed display (in blocks per second)
 - Visual reference lines for orientation
 
-**Target Minecraft Version:** 1.21.4 (with Fabric Loader 0.16.10+)
+**Supported Loaders:** Fabric, NeoForge (via Stonecraft/Architectury)
+**Target Minecraft Version:** 1.21.4
+
+## Build System: Stonecraft + Stonecutter
+
+This project uses [Stonecraft](https://stonecraft.meza.gg/) for multi-loader, multi-version support:
+- **Stonecutter**: Preprocessor for version-specific code paths
+- **Architectury**: Platform abstraction layer
+- **Single codebase**: One source tree builds for all platforms
+
+### Preprocessor Syntax
+
+```java
+//? if fabric {
+// Fabric-specific code here
+//?} else if neoforge {
+/*
+// NeoForge-specific code here
+*///?}
+```
 
 ## Repository Structure
 
@@ -15,108 +34,100 @@
 critical-flight-details/
 ├── src/main/
 │   ├── java/net/critical/flight_display/
-│   │   ├── FlightDisplayClient.java    # Client mod entry point (ClientModInitializer)
+│   │   ├── FlightDisplayClient.java     # Entry point (multi-loader)
+│   │   ├── NeoForgeHudRenderer.java     # NeoForge event handler
 │   │   ├── hud/
-│   │   │   └── FlightDisplayHud.java   # HUD rendering logic (DrawContext API)
+│   │   │   └── FlightDisplayHud.java    # HUD rendering (multi-loader)
 │   │   └── mixin/
-│   │       └── InGameHudMixin.java     # Mixin to inject HUD into InGameHud
+│   │       └── InGameHudMixin.java      # Fabric mixin
 │   └── resources/
-│       ├── fabric.mod.json             # Mod metadata and entry points
-│       ├── flight_display.mixins.json  # Mixin configuration
-│       └── assets/flight_display/      # Mod assets (icon.png)
+│       ├── fabric.mod.json              # Fabric metadata
+│       ├── META-INF/neoforge.mods.toml  # NeoForge metadata
+│       ├── flight_display.mixins.json   # Mixin configuration
+│       └── assets/flight_display/
+├── versions/
+│   └── dependencies/
+│       └── 1.21.4.properties            # Version-specific deps
 ├── .github/workflows/
-│   ├── build.yml                       # CI build on push/PR
-│   └── release.yml                     # Deploy to CurseForge/Modrinth on tag
-├── build.gradle                        # Gradle build with Fabric Loom 1.9
-├── gradle.properties                   # Version numbers and mod properties
-├── settings.gradle                     # Plugin repository configuration
-├── CHANGELOG.md                        # Version history
-├── PLAN.md                             # Multi-platform expansion roadmap
-└── LICENSE                             # MIT License
+│   ├── build.yml                        # Multi-loader CI build
+│   └── release.yml                      # Multi-loader release
+├── build.gradle.kts                     # Stonecraft build config
+├── settings.gradle.kts                  # Stonecutter setup
+├── stonecutter.gradle.kts               # Active version selector
+├── gradle.properties                    # Mod metadata
+└── PLAN.md                              # Implementation roadmap
 ```
 
 ## Build Commands
 
 ```bash
-# Build the mod JAR
+# Build active version (1.21.4-fabric by default)
 ./gradlew build
 
-# Output location: build/libs/critical-flight-details-<version>.jar
+# Build ALL versions (Fabric + NeoForge)
+./gradlew chiseledBuild
 
-# Refresh dependencies after changing versions
-./gradlew --refresh-dependencies
-
-# Run the Minecraft client with the mod
+# Run Minecraft client with mod
 ./gradlew runClient
 
 # Run tests
 ./gradlew test
 
-# Publish to GitHub Packages
-./gradlew publish
+# Switch active version
+./gradlew "Set active project to 1.21.4-neoforge"
 ```
 
 ## Key Technical Patterns
 
-### Mixin System
-- Uses SpongePowered Mixin to inject into Minecraft's `InGameHud` class
-- `InGameHudMixin.java` injects at two points:
-  1. `<init>` constructor - initializes the FlightDisplayHud
-  2. `render` method tail - draws HUD when player is Elytra flying
-- Mixins are registered in `flight_display.mixins.json`
-- All mixins use `@Environment(EnvType.CLIENT)` annotation
+### Platform-Specific Entry Points
 
-### HUD Rendering (Modern API)
-- Uses `DrawContext` for all rendering (replaced MatrixStack in 1.20+)
-- Uses `RenderSystem` and `BufferRenderer` for line drawing
-- Uses `context.drawText()` for text display
-- Speed calculated as blocks per second (distance / ticks * 20)
+**Fabric:**
+- Entry: `FlightDisplayClient implements ClientModInitializer`
+- HUD: Mixin injection into `InGameHud.render()`
 
-### Entry Point
-- Client entry point: `FlightDisplayClient` implements `ClientModInitializer`
-- Registered in `fabric.mod.json` under `entrypoints.client`
+**NeoForge:**
+- Entry: `FlightDisplayClient` with `@Mod` annotation
+- HUD: Event subscriber for `RenderGuiLayerEvent.Post`
+
+### HUD Rendering (Multi-Loader)
+
+The HUD uses platform-specific rendering APIs:
+- **Fabric**: `DrawContext`, `MinecraftClient`, Yarn mappings
+- **NeoForge**: `GuiGraphics`, `Minecraft`, Mojang mappings
+
+Stonecutter preprocessor comments handle the differences.
+
+### Mixin System (Fabric Only)
+
+- Mixins inject into `InGameHud` class
+- Registered in `flight_display.mixins.json`
+- NeoForge uses events instead
 
 ## Development Conventions
 
 ### Code Style
-- **Java 21** required (modern LTS version)
-- Package structure: `net.critical.flight_display`
-- Client-only code uses `@Environment(EnvType.CLIENT)` annotation
-- Use `@Unique` for mixin fields to avoid conflicts
+- **Java 21** required
+- Package: `net.critical.flight_display`
+- Use `//? if loader {` preprocessor for platform code
+- Fabric annotations: `@Environment(EnvType.CLIENT)`
+- NeoForge annotations: `@OnlyIn(Dist.CLIENT)`
 
 ### Version Management
-- All versions defined in `gradle.properties`
-- Version injected into `fabric.mod.json` via Gradle's `processResources`
-- Changelog maintained in `CHANGELOG.md`
-
-### Naming Conventions
-- Mixin classes suffixed with `Mixin` (e.g., `InGameHudMixin`)
-- Client initializers suffixed with `Client`
-- HUD components in `hud` subpackage
-
-## Dependencies
-
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| Minecraft | 1.21.4 | Target game version |
-| Yarn Mappings | 1.21.4+build.8 | Deobfuscation mappings |
-| Fabric Loader | 0.16.10+ | Mod loader |
-| Fabric API | 0.114.0+1.21.4 | Fabric utilities |
-| Gradle | 8.11.1 | Build system |
-| Fabric Loom | 1.9-SNAPSHOT | Gradle plugin |
+- Mod metadata in `gradle.properties`
+- Version-specific deps in `versions/dependencies/*.properties`
+- Changelog in `CHANGELOG.md`
 
 ## CI/CD Pipeline
 
 ### Build Workflow (`build.yml`)
-- Triggers on push/PR to `dev`, `test`, `main` branches
-- Builds with Java 21
-- Runs tests
-- Uploads build artifacts
+- Triggers on push/PR to dev/test/main
+- Builds all loaders with `chiseledBuild`
+- Uploads separate artifacts for Fabric and NeoForge
 
 ### Release Workflow (`release.yml`)
-- Triggers on tags starting with `v*` pushed to `main`
-- Creates GitHub Release
-- Publishes to CurseForge and Modrinth via [mc-publish](https://github.com/Kir-Antipov/mc-publish)
+- Triggers on version tags (v*)
+- Publishes Fabric and NeoForge separately
+- Deploys to CurseForge and Modrinth
 
 ### Required Secrets
 ```
@@ -126,48 +137,52 @@ CURSEFORGE_ID    - CurseForge project ID
 CURSEFORGE_TOKEN - CurseForge API token
 ```
 
-## Branch Strategy
+## Dependencies
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | Production releases (triggers deployment) |
-| `test` | Integration testing |
-| `dev`  | Active development |
+| Component | Fabric | NeoForge |
+|-----------|--------|----------|
+| Minecraft | 1.21.4 | 1.21.4 |
+| Loader | 0.16.10 | 21.4.0 |
+| API | Fabric API 0.114.0 | - |
+| Mappings | Yarn | Mojang |
 
 ## Important Notes for AI Assistants
 
-1. **Client-Side Only**: All code must be annotated with `@Environment(EnvType.CLIENT)`
+1. **Client-Side Only**: No server-side code needed
 
-2. **Modern Rendering**: Use `DrawContext` API, not deprecated `MatrixStack` methods
+2. **Multi-Loader Code**: Use Stonecutter preprocessor:
+   ```java
+   //? if fabric {
+   // Fabric code
+   //?} else if neoforge {
+   /*// NeoForge code*///?}
+   ```
 
-3. **Mixin Injection**: Current injection uses `@At("TAIL")` on the render method
+3. **Rendering Differences**:
+   - Fabric: `DrawContext`, `textRenderer`, `world`
+   - NeoForge: `GuiGraphics`, `font`, `level`
 
-4. **Rendering Context**: HUD only renders when `player.isFallFlying()` is true
+4. **Event Systems**:
+   - Fabric: Mixin injection
+   - NeoForge: `@SubscribeEvent` annotations
 
-5. **No Server Requirements**: This mod does not require server-side installation
+5. **Active Version**: Check `stonecutter.gradle.kts` for current build target
 
-6. **Speed Calculation**: Calculated every 10 ticks using Euclidean distance, displayed as blocks/second
-
-7. **Planned Features** (see PLAN.md):
-   - Multi-loader support (Forge, NeoForge, Quilt)
-   - Multi-version support (1.16 - 1.21+)
-   - Configuration system
-   - Altitude indicators and compass
+6. **Testing**: Tests run on the active version only
 
 ## Testing
 
 ### Manual Testing
 1. Run `./gradlew runClient`
-2. Enter a Minecraft world in Creative/Survival mode
-3. Equip Elytra and start flying (jump from height or use fireworks)
-4. Verify HUD elements appear:
-   - Pitch indicator on left
-   - Speed display below pitch
-   - Vertical reference lines
+2. Enter a world, equip Elytra, fly
+3. Verify HUD elements appear
 
-### Automated Testing
-- Unit tests in `src/test/java/` (planned)
-- Game tests using Fabric's gametest API (planned)
+### Switching Loaders for Testing
+```bash
+# Switch to NeoForge
+./gradlew "Set active project to 1.21.4-neoforge"
+./gradlew runClient
+```
 
 ## License
 

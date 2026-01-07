@@ -1,21 +1,21 @@
 {
   "schemaVersion": 1,
-  "id": "flight_display",
-  "version": "${version}",
+  "id": "${mod_id}",
+  "version": "${mod_version}",
 
-  "name": "Critical Flight Display",
-  "description": "Adds HUD for Elytra Flight with pitch indicator, speed display, and visual horizon lines",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
   "authors": [
     "TheCritic",
     "bshuler"
   ],
   "contact": {
-    "homepage": "https://github.com/bshuler/critical-flight-details",
-    "sources": "https://github.com/bshuler/critical-flight-details",
-    "issues": "https://github.com/bshuler/critical-flight-details/issues"
+    "homepage": "${mod_homepage}",
+    "sources": "${mod_sources}",
+    "issues": "${mod_issues}"
   },
 
-  "license": "MIT",
+  "license": "${mod_license}",
   "icon": "assets/flight_display/icon.png",
 
   "environment": "client",
@@ -29,7 +29,7 @@
   ],
 
   "depends": {
-    "fabricloader": ">=${loader_version}",
+    "fabricloader": ">=0.16.0",
     "fabric-api": "*",
     "minecraft": "~1.21",
     "java": ">=21"
