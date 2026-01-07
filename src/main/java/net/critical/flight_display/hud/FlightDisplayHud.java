@@ -1,105 +1,113 @@
 package net.critical.flight_display.hud;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.network.ClientPlayerEntity;
-
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.util.math.MatrixStack;
-import org.lwjgl.opengl.GL11;
-
-import java.awt.Color;
-import java.lang.Math;
-
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.*;
 
 @Environment(EnvType.CLIENT)
-public class FlightDisplayHud implements Drawable {
+public class FlightDisplayHud {
+    private static final int RED_COLOR = 0xFFFF0000;
+    private static final int GREEN_COLOR = 0xFF00FF00;
+
     private final MinecraftClient client;
-    private final TextRenderer fontRenderer;
-    private ClientPlayerEntity player;
-    private double last_x=0;
-    private double last_y=0;
-    private double last_z=0;
-    private long last_time=0;
-    private int speed=0;
+    private double lastX = 0;
+    private double lastY = 0;
+    private double lastZ = 0;
+    private long lastTime = 0;
+    private int speed = 0;
 
     public FlightDisplayHud(MinecraftClient client) {
         this.client = client;
-        this.fontRenderer = client.textRenderer;
     }
 
-    public void draw() {
+    public void render(DrawContext context) {
+        if (client.player == null || client.world == null) {
+            return;
+        }
 
-        int height = client.getWindow().getScaledHeight();
-        int width = client.getWindow().getScaledWidth();
+        int screenHeight = client.getWindow().getScaledHeight();
+        int screenWidth = client.getWindow().getScaledWidth();
 
-        double factor = 3;
+        double factor = 3.0;
 
-        int zLevel = 1;
-        double top = height/factor;
-        double left = width/factor;
-        double right = (width/factor) * (factor-1);
-        double bottom = (height/factor) * (factor-1);
-        double middle_height = height/2.0;
-        double height_of_display = bottom - top;
-        int number_of_hashes = 11;
-        double distance_between_hashes = height_of_display / number_of_hashes;
+        double top = screenHeight / factor;
+        double left = screenWidth / factor;
+        double right = (screenWidth / factor) * (factor - 1);
+        double bottom = (screenHeight / factor) * (factor - 1);
+        double middleHeight = screenHeight / 2.0;
+        double heightOfDisplay = bottom - top;
+        int numberOfHashes = 11;
+        double distanceBetweenHashes = heightOfDisplay / numberOfHashes;
 
-        this.player = this.client.player;
+        // Get player pitch
+        float pitch = client.player.getPitch(1.0f);
+        int displayPitch = (int) pitch;
+        double pitchOffset = (distanceBetweenHashes / 10) * (displayPitch % 10);
 
-        float pitch = this.player.getPitch(0);
-        int display_pitch = (int) pitch;
-        double pitch_offset = (distance_between_hashes / 10) * (display_pitch % 10);
+        // Draw pitch text
+        String pitchText = String.format("Pitch: %d", (int) (-pitch));
+        context.drawText(client.textRenderer, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR, true);
 
-        int lineHeight = this.fontRenderer.fontHeight + 2;
-        MatrixStack matrixStack = new MatrixStack();
-        this.fontRenderer.draw(matrixStack, String.format("Pitch: %s", (int) this.player.getPitch(0)*-1), (float) left+10, (float) middle_height, Color.RED.getRGB());
-        this.fontRenderer.draw(matrixStack, String.format("Speed: %s", (int) this.speed ), (float) left+10, (float) bottom, Color.RED.getRGB());
+        // Draw speed text
+        String speedText = String.format("Speed: %d", speed);
+        context.drawText(client.textRenderer, speedText, (int) left + 10, (int) bottom, RED_COLOR, true);
 
-        for(double hash_y = top; hash_y <= bottom + distance_between_hashes; hash_y = hash_y + distance_between_hashes) {
-            double hash_y_offset = hash_y + pitch_offset;
-            if (hash_y_offset >= top) {
-                if (hash_y_offset <= bottom) {
-                    drawLine(left - 10, hash_y + pitch_offset, left, hash_y + pitch_offset, Color.RED);
-                }
+        // Draw pitch indicator hash marks
+        for (double hashY = top; hashY <= bottom + distanceBetweenHashes; hashY += distanceBetweenHashes) {
+            double hashYOffset = hashY + pitchOffset;
+            if (hashYOffset >= top && hashYOffset <= bottom) {
+                drawLine(context, (int) (left - 10), (int) hashYOffset, (int) left, (int) hashYOffset, RED_COLOR);
             }
         }
 
-//        this.fontRenderer.draw( String.format("%s %s %s",  (int) this.last_x, (int) this.last_y, (int) this.last_z), (float) left+10, (float) bottom+lineHeight, Color.RED.getRGB());
-//        this.fontRenderer.draw( String.format("%s %s %s",  (int) client.player.getX(), (int) client.player.getY(), (int) client.player.getZ()), (float) left+10, (float) bottom+(lineHeight*2), Color.RED.getRGB());
-//        this.fontRenderer.draw( String.format("%s",  client.world.getTime()), (float) left+10, (float) bottom+(lineHeight*3), Color.RED.getRGB());
+        // Draw vertical reference lines
+        drawLine(context, (int) left, (int) top, (int) left, (int) bottom, RED_COLOR);
+        drawLine(context, (int) right, (int) top, (int) right, (int) bottom, GREEN_COLOR);
 
-        drawLine(left, top, left, bottom, Color.RED);
-        drawLine(right, top, right, bottom, Color.GREEN);
+        // Calculate speed every 10 ticks
+        long currentTime = client.world.getTime();
+        if (currentTime > lastTime + 10) {
+            double dx = client.player.getX() - lastX;
+            double dy = client.player.getY() - lastY;
+            double dz = client.player.getZ() - lastZ;
+            double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            long timeDelta = currentTime - lastTime;
 
-        if (client.world.getTime() > this.last_time+10) {
-            double distance = (Math.pow(client.player.getX() -  this.last_x, 2) + Math.pow(client.player.getY() -  this.last_y, 2) + Math.pow(client.player.getZ() -  this.last_z, 2)) * 0.5;
-            this.speed = (int) (distance/(client.world.getTime() - this.last_time));
+            if (timeDelta > 0) {
+                speed = (int) (distance / timeDelta * 20); // Convert to blocks per second
+            }
 
-            this.last_time = client.world.getTime();
-            this.last_x = client.player.getX();
-            this.last_y = client.player.getY();
-            this.last_z = client.player.getZ();
+            lastTime = currentTime;
+            lastX = client.player.getX();
+            lastY = client.player.getY();
+            lastZ = client.player.getZ();
+        }
+    }
+
+    private void drawLine(DrawContext context, int x1, int y1, int x2, int y2, int color) {
+        // Extract color components
+        int alpha = (color >> 24) & 0xFF;
+        int red = (color >> 16) & 0xFF;
+        int green = (color >> 8) & 0xFF;
+        int blue = color & 0xFF;
+
+        if (alpha == 0) {
+            alpha = 255;
         }
 
-        this.client.getProfiler().pop();
-    }
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 
-    private void drawLine(double x1, double y1, double x2, double y2, Color c) {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_LINES, VertexFormats.POSITION_COLOR);
-        buffer.vertex((double) x1, (double) y1, (double) 1).color(c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha()).next();
-        buffer.vertex((double) x2, (double) y2, (double) 1).color(c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha()).next();
-        tessellator.draw();
-    }
+        BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+        buffer.vertex(x1, y1, 0).color(red, green, blue, alpha);
+        buffer.vertex(x2, y2, 0).color(red, green, blue, alpha);
 
-    @Override
-    public void render(MatrixStack matrixstack, int mouseX, int mouseY, float delta) {
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+
+        RenderSystem.disableBlend();
     }
 }

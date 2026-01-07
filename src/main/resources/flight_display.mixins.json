@@ -1,11 +1,9 @@
 {
   "required": true,
   "package": "net.critical.flight_display.mixin",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [
-  ],
+  "compatibilityLevel": "JAVA_21",
   "client": [
-    "GameInfoMixin"
+    "InGameHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1
