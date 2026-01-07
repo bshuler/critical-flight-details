@@ -24,11 +24,15 @@ stonecutter {
         fun mc(version: String, vararg loaders: String) {
             for (loader in loaders) vers("$version-$loader", version)
         }
-        // Start with 1.21.4 for Fabric and NeoForge
+
+        // Minecraft 1.21.x - Latest (NeoForge era)
         mc("1.21.4", "fabric", "neoforge")
-        // Will add more versions later:
-        // mc("1.20.6", "fabric", "neoforge")
-        // mc("1.20.1", "fabric", "forge")
+
+        // Minecraft 1.20.x - Trails & Tales
+        mc("1.20.6", "fabric", "neoforge")  // Last 1.20.x with NeoForge
+        mc("1.20.1", "fabric", "forge")     // Last version before NeoForge split
+
+        // Default active version
         vcsVersion = "1.21.4-fabric"
     }
     create(rootProject)

@@ -46,6 +46,13 @@ jobs:
         path: versions/*-neoforge/build/libs/*.jar
         retention-days: 7
 
+    - name: Upload Forge artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: forge-jars
+        path: versions/*-forge/build/libs/*.jar
+        retention-days: 7
+
   test:
     runs-on: ubuntu-latest
     needs: build

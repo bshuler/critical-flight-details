@@ -16,11 +16,19 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.*;
 import com.mojang.blaze3d.vertex.*;
+*///?} else if forge {
+/*
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.*;
+import com.mojang.blaze3d.vertex.*;
 *///?}
 
 //? if fabric {
 @Environment(EnvType.CLIENT)
-//?} else if neoforge {
+//?} else {
 /*@OnlyIn(Dist.CLIENT)*///?}
 public class FlightDisplayHud {
     private static final int RED_COLOR = 0xFFFF0000;
@@ -28,7 +36,7 @@ public class FlightDisplayHud {
 
     //? if fabric {
     private final MinecraftClient client;
-    //?} else if neoforge {
+    //?} else {
     /*private final Minecraft client;*///?}
 
     private double lastX = 0;
@@ -43,20 +51,26 @@ public class FlightDisplayHud {
     }
 
     public void render(DrawContext context) {
-    //?} else if neoforge {
+        if (client.player == null || client.world == null) {
+            return;
+        }
+
+        int screenHeight = client.getWindow().getScaledHeight();
+        int screenWidth = client.getWindow().getScaledWidth();
+    //?} else {
     /*
     public FlightDisplayHud(Minecraft client) {
         this.client = client;
     }
 
     public void render(GuiGraphics context) {
-    *///?}
         if (client.player == null || client.level == null) {
             return;
         }
 
         int screenHeight = client.getWindow().getGuiScaledHeight();
         int screenWidth = client.getWindow().getGuiScaledWidth();
+    *///?}
 
         double factor = 3.0;
 
@@ -70,7 +84,10 @@ public class FlightDisplayHud {
         double distanceBetweenHashes = heightOfDisplay / numberOfHashes;
 
         // Get player pitch
-        float pitch = client.player.getXRot();
+        //? if fabric {
+        float pitch = client.player.getPitch(1.0f);
+        //?} else {
+        /*float pitch = client.player.getXRot();*///?}
         int displayPitch = (int) pitch;
         double pitchOffset = (distanceBetweenHashes / 10) * (displayPitch % 10);
 
@@ -78,14 +95,14 @@ public class FlightDisplayHud {
         String pitchText = String.format("Pitch: %d", (int) (-pitch));
         //? if fabric {
         context.drawText(client.textRenderer, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR, true);
-        //?} else if neoforge {
+        //?} else {
         /*context.drawString(client.font, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR, true);*///?}
 
         // Draw speed text
         String speedText = String.format("Speed: %d", speed);
         //? if fabric {
         context.drawText(client.textRenderer, speedText, (int) left + 10, (int) bottom, RED_COLOR, true);
-        //?} else if neoforge {
+        //?} else {
         /*context.drawString(client.font, speedText, (int) left + 10, (int) bottom, RED_COLOR, true);*///?}
 
         // Draw pitch indicator hash marks
@@ -103,7 +120,7 @@ public class FlightDisplayHud {
         // Calculate speed every 10 ticks
         //? if fabric {
         long currentTime = client.world.getTime();
-        //?} else if neoforge {
+        //?} else {
         /*long currentTime = client.level.getGameTime();*///?}
 
         if (currentTime > lastTime + 10) {
@@ -126,8 +143,6 @@ public class FlightDisplayHud {
 
     //? if fabric {
     private void drawLine(DrawContext context, int x1, int y1, int x2, int y2, int color) {
-    //?} else if neoforge {
-    /*private void drawLine(GuiGraphics context, int x1, int y1, int x2, int y2, int color) {*///?}
         // Extract color components
         int alpha = (color >> 24) & 0xFF;
         int red = (color >> 16) & 0xFF;
@@ -140,20 +155,39 @@ public class FlightDisplayHud {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        //? if fabric {
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
         buffer.vertex(x1, y1, 0).color(red, green, blue, alpha);
         buffer.vertex(x2, y2, 0).color(red, green, blue, alpha);
         BufferRenderer.drawWithGlobalProgram(buffer.end());
-        //?} else if neoforge {
-        /*
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-        buffer.addVertex(x1, y1, 0).setColor(red, green, blue, alpha);
-        buffer.addVertex(x2, y2, 0).setColor(red, green, blue, alpha);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
-        *///?}
+
         RenderSystem.disableBlend();
     }
+    //?} else {
+    /*
+    private void drawLine(GuiGraphics context, int x1, int y1, int x2, int y2, int color) {
+        // Extract color components
+        int alpha = (color >> 24) & 0xFF;
+        int red = (color >> 16) & 0xFF;
+        int green = (color >> 8) & 0xFF;
+        int blue = color & 0xFF;
+
+        if (alpha == 0) {
+            alpha = 255;
+        }
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+
+        BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+        buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+        buffer.vertex(x1, y1, 0).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(x2, y2, 0).color(red, green, blue, alpha).endVertex();
+        BufferUploader.drawWithShader(buffer.end());
+
+        RenderSystem.disableBlend();
+    }
+    *///?}
 }

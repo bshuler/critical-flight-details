@@ -11,6 +11,13 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+*///?} else if forge {
+/*
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 *///?}
 
 import org.slf4j.Logger;
@@ -22,6 +29,11 @@ public class FlightDisplayClient implements ClientModInitializer {
 //?} else if neoforge {
 /*
 @Mod(value = FlightDisplayClient.MOD_ID, dist = Dist.CLIENT)
+@OnlyIn(Dist.CLIENT)
+public class FlightDisplayClient {
+*///?} else if forge {
+/*
+@Mod(FlightDisplayClient.MOD_ID)
 @OnlyIn(Dist.CLIENT)
 public class FlightDisplayClient {
 *///?}
@@ -41,6 +53,16 @@ public class FlightDisplayClient {
     }
 
     private void onClientSetup(FMLClientSetupEvent event) {
+        init();
+    }
+    *///?} else if forge {
+    /*
+    public FlightDisplayClient() {
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
+    }
+
+    private void onClientSetup(FMLClientSetupEvent event) {
+        ForgeHudRenderer.register();
         init();
     }
     *///?}
