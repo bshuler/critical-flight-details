@@ -20,6 +20,8 @@ public class FlightDisplayConfig {
     public boolean showPitchIndicator = true;
     public boolean showSpeedDisplay = true;
     public boolean showHorizonLines = true;
+    public boolean showAltitudeDisplay = true;
+    public boolean showHeadingDisplay = true;
 
     // HUD position (as fraction of screen: 0.0 = left/top, 1.0 = right/bottom)
     public double hudLeftPosition = 0.333;  // 1/3 from left
@@ -29,10 +31,16 @@ public class FlightDisplayConfig {
     public int pitchIndicatorColor = 0xFFFF0000;  // Red
     public int horizonLineColor = 0xFF00FF00;     // Green
     public int textColor = 0xFFFF0000;            // Red
+    public int altitudeColor = 0xFFFFFF00;        // Yellow
+    public int headingColor = 0xFF00FFFF;         // Cyan
 
     // Display options
     public boolean showTextShadow = true;
     public int speedUpdateInterval = 10;  // Ticks between speed updates
+
+    // Altitude display options
+    public boolean showAltitudeAboveGround = true;  // Show height above ground (AGL)
+    public boolean showAltitudeAbsolute = true;     // Show Y coordinate (MSL)
 
     private FlightDisplayConfig() {}
 

@@ -160,6 +160,98 @@ public class FlightDisplayHud {
             //?}*///?}
         }
 
+        // Draw altitude display (if enabled)
+        if (config.showAltitudeDisplay) {
+            int altitudeColor = config.altitudeColor;
+            int yOffset = 0;
+
+            // Absolute altitude (Y coordinate / MSL)
+            if (config.showAltitudeAbsolute) {
+                int absoluteAlt = (int) client.player.getY();
+                String altText = String.format("Alt: %d", absoluteAlt);
+                //? if fabric {
+                //? if >=1.20 {
+                context.drawText(client.textRenderer, altText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor, showShadow);
+                //?} else {
+                /*if (showShadow) {
+                    client.textRenderer.drawWithShadow(matrices, altText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor);
+                } else {
+                    client.textRenderer.draw(matrices, altText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor);
+                }*///?}
+                //?} else {
+                /*//? if >=1.20 {
+                context.drawString(client.font, altText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor, showShadow);
+                //?} else {
+                if (showShadow) {
+                    client.font.drawShadow(poseStack, altText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor);
+                } else {
+                    client.font.draw(poseStack, altText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor);
+                }
+                //?}*///?}
+                yOffset += 12;
+            }
+
+            // Height above ground (AGL)
+            if (config.showAltitudeAboveGround) {
+                int groundHeight = getGroundHeight();
+                int agl = (int) client.player.getY() - groundHeight;
+                String aglText = String.format("AGL: %d", agl);
+                //? if fabric {
+                //? if >=1.20 {
+                context.drawText(client.textRenderer, aglText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor, showShadow);
+                //?} else {
+                /*if (showShadow) {
+                    client.textRenderer.drawWithShadow(matrices, aglText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor);
+                } else {
+                    client.textRenderer.draw(matrices, aglText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor);
+                }*///?}
+                //?} else {
+                /*//? if >=1.20 {
+                context.drawString(client.font, aglText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor, showShadow);
+                //?} else {
+                if (showShadow) {
+                    client.font.drawShadow(poseStack, aglText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor);
+                } else {
+                    client.font.draw(poseStack, aglText, (int) right + 10, (int) middleHeight + yOffset, altitudeColor);
+                }
+                //?}*///?}
+            }
+        }
+
+        // Draw heading/compass display (if enabled)
+        if (config.showHeadingDisplay) {
+            int headingColor = config.headingColor;
+            //? if fabric {
+            float yaw = client.player.getYaw(1.0f);
+            //?} else {
+            /*float yaw = client.player.getYRot();*///?}
+
+            // Normalize yaw to 0-360
+            float heading = ((yaw % 360) + 360) % 360;
+            String direction = getCardinalDirection(heading);
+            String headingText = String.format("HDG: %.0f° %s", heading, direction);
+
+            //? if fabric {
+            //? if >=1.20 {
+            context.drawText(client.textRenderer, headingText, (int) right + 10, (int) top, headingColor, showShadow);
+            //?} else {
+            /*if (showShadow) {
+                client.textRenderer.drawWithShadow(matrices, headingText, (int) right + 10, (int) top, headingColor);
+            } else {
+                client.textRenderer.draw(matrices, headingText, (int) right + 10, (int) top, headingColor);
+            }*///?}
+            //?} else {
+            /*//? if >=1.20 {
+            context.drawString(client.font, headingText, (int) right + 10, (int) top, headingColor, showShadow);
+            //?} else {
+            if (showShadow) {
+                client.font.drawShadow(poseStack, headingText, (int) right + 10, (int) top, headingColor);
+            } else {
+                client.font.draw(poseStack, headingText, (int) right + 10, (int) top, headingColor);
+            }
+            //?}*///?}
+        }
+
         // Draw pitch indicator hash marks (if enabled)
         if (config.showPitchIndicator) {
             for (double hashY = top; hashY <= bottom + distanceBetweenHashes; hashY += distanceBetweenHashes) {
@@ -198,6 +290,48 @@ public class FlightDisplayHud {
             lastY = client.player.getY();
             lastZ = client.player.getZ();
         }
+    }
+
+    /**
+     * Get the ground height below the player
+     */
+    private int getGroundHeight() {
+        int playerX = (int) Math.floor(client.player.getX());
+        int playerY = (int) Math.floor(client.player.getY());
+        int playerZ = (int) Math.floor(client.player.getZ());
+
+        //? if fabric {
+        // Search downward for solid ground
+        for (int y = playerY; y >= client.world.getBottomY(); y--) {
+            if (!client.world.isAir(new net.minecraft.util.math.BlockPos(playerX, y, playerZ))) {
+                return y + 1;
+            }
+        }
+        return client.world.getBottomY();
+        //?} else {
+        /*// Search downward for solid ground
+        for (int y = playerY; y >= client.level.getMinBuildHeight(); y--) {
+            if (!client.level.isEmptyBlock(new net.minecraft.core.BlockPos(playerX, y, playerZ))) {
+                return y + 1;
+            }
+        }
+        return client.level.getMinBuildHeight();*///?}
+    }
+
+    /**
+     * Get cardinal direction from heading
+     */
+    private String getCardinalDirection(float heading) {
+        // Minecraft: 0 = South, 90 = West, 180 = North, 270 = East
+        if (heading >= 337.5 || heading < 22.5) return "S";
+        if (heading >= 22.5 && heading < 67.5) return "SW";
+        if (heading >= 67.5 && heading < 112.5) return "W";
+        if (heading >= 112.5 && heading < 157.5) return "NW";
+        if (heading >= 157.5 && heading < 202.5) return "N";
+        if (heading >= 202.5 && heading < 247.5) return "NE";
+        if (heading >= 247.5 && heading < 292.5) return "E";
+        if (heading >= 292.5 && heading < 337.5) return "SE";
+        return "";
     }
 
     //? if fabric {

@@ -276,7 +276,7 @@ public class FlightDisplayHud {
 16. [ ] Test all version/loader combinations (pending CI)
 
 ### Stage 4: Polish (Next)
-17. [ ] Add configuration system (Cloth Config)
+17. [x] Add configuration system (JSON-based)
 18. [ ] Add planned features (altitude, compass)
 19. [ ] Documentation and release
 20. [ ] Publish to CurseForge and Modrinth

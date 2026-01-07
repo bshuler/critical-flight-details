@@ -5,6 +5,8 @@
 **Critical Flight Display** is a multi-loader Minecraft mod that enhances the game's HUD with flight information while using an Elytra. The mod is client-side only and displays:
 - Pitch indicator with visual horizon lines
 - Speed display (in blocks per second)
+- Altitude display (absolute Y and height above ground)
+- Compass/heading display with cardinal directions
 - Visual reference lines for orientation
 
 **Supported Loaders:** Fabric, NeoForge, Forge (via Stonecraft/Stonecutter)
@@ -181,13 +183,19 @@ The mod uses a simple JSON configuration file stored in the config directory:
   "showPitchIndicator": true,     // Show pitch indicator and hash marks
   "showSpeedDisplay": true,       // Show speed display
   "showHorizonLines": true,       // Show vertical reference lines
+  "showAltitudeDisplay": true,    // Show altitude display
+  "showHeadingDisplay": true,     // Show compass/heading display
   "hudLeftPosition": 0.333,       // Left edge position (0.0-1.0)
   "hudRightPosition": 0.667,      // Right edge position (0.0-1.0)
   "pitchIndicatorColor": -65536,  // Pitch indicator color (ARGB)
   "horizonLineColor": -16711936,  // Horizon line color (ARGB)
   "textColor": -65536,            // Text color (ARGB)
+  "altitudeColor": -256,          // Altitude display color (ARGB, yellow)
+  "headingColor": -16711681,      // Heading display color (ARGB, cyan)
   "showTextShadow": true,         // Show shadow behind text
-  "speedUpdateInterval": 10       // Ticks between speed updates
+  "speedUpdateInterval": 10,      // Ticks between speed updates
+  "showAltitudeAboveGround": true,// Show AGL (height above ground)
+  "showAltitudeAbsolute": true    // Show absolute Y coordinate
 }
 ```
 
