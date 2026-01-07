@@ -63,7 +63,7 @@ public abstract class InGameHudMixin {
 //?} else {
 /*
 // This file is only used by Fabric. NeoForge/Forge use event handlers instead.
-// See NeoForgeHudRenderer.java or ForgeHudRenderer.java for those implementations.
+// See NeoForgeHudRenderer.java for NeoForge implementation.
 package net.critical.flight_display.mixin;
 public abstract class InGameHudMixin {}
 *///?}
