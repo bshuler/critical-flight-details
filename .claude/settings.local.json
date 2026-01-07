@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "WebFetch(domain:maven.architectury.dev)",
+      "WebFetch(domain:maven.neoforged.net)",
+      "WebFetch(domain:stonecraft.meza.gg)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:maven.fabricmc.net)"
+    ]
+  }
+}

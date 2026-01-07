@@ -5,7 +5,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.loader.api.FabricLoader;
-//?} else if neoforge {
+//?} elif neoforge {
 /*
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -13,7 +13,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-*///?} else if forge {
+*///?} elif forge {
 /*
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -30,12 +30,12 @@ import org.slf4j.LoggerFactory;
 //? if fabric {
 @Environment(EnvType.CLIENT)
 public class FlightDisplayClient implements ClientModInitializer {
-//?} else if neoforge {
+//?} elif neoforge {
 /*
 @Mod(value = FlightDisplayClient.MOD_ID, dist = Dist.CLIENT)
 @OnlyIn(Dist.CLIENT)
 public class FlightDisplayClient {
-*///?} else if forge {
+*///?} elif forge {
 /*
 @Mod(FlightDisplayClient.MOD_ID)
 @OnlyIn(Dist.CLIENT)
@@ -50,16 +50,17 @@ public class FlightDisplayClient {
     public void onInitializeClient() {
         init();
     }
-    //?} else if neoforge {
+    //?} elif neoforge {
     /*
     public FlightDisplayClient(IEventBus modEventBus) {
         modEventBus.addListener(this::onClientSetup);
     }
 
     private void onClientSetup(FMLClientSetupEvent event) {
+        NeoForgeHudRenderer.register();
         init();
     }
-    *///?} else if forge {
+    *///?} elif forge {
     /*
     public FlightDisplayClient() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
@@ -76,7 +77,8 @@ public class FlightDisplayClient {
         //? if fabric {
         FlightDisplayConfig.setConfigPath(FabricLoader.getInstance().getConfigDir());
         //?} else {
-        /*FlightDisplayConfig.setConfigPath(FMLPaths.CONFIGDIR.get());*///?}
+        /*FlightDisplayConfig.setConfigPath(FMLPaths.CONFIGDIR.get());
+        *///?}
 
         // Load config
         FlightDisplayConfig.getInstance();

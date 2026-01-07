@@ -20,23 +20,24 @@ plugins {
 stonecutter {
     centralScript = "build.gradle.kts"
     kotlinController = true
-
-    create(rootProject) {
-        fun mc(mcVersion: String, vararg loaders: String) {
-            for (loader in loaders) version("$mcVersion-$loader", mcVersion)
+    shared {
+        fun mc(version: String, vararg loaders: String) {
+            for (loader in loaders) version("$version-$loader", version)
         }
 
-        // Minecraft versions - Fabric only for now
-        // NeoForge/Forge support requires additional Stonecraft configuration
-        mc("1.21.4", "fabric")
-        mc("1.20.6", "fabric")
-        mc("1.20.1", "fabric")
-        mc("1.19.4", "fabric")
-        mc("1.18.2", "fabric")
-
-        // Default active version
-        vcsVersion = "1.21.4-fabric"
+        // Target versions and loaders
+        // Latest (1.21.4) - Fabric + NeoForge
+        mc("1.21.4", "fabric", "neoforge")
+        // 1.20.6 - Fabric + NeoForge (both available)
+        mc("1.20.6", "fabric", "neoforge")
+        // 1.20.1 - Fabric + Forge (last major Forge version before NeoForge split)
+        mc("1.20.1", "fabric", "forge")
+        // 1.19.4 - Fabric + Forge
+        mc("1.19.4", "fabric", "forge")
+        // 1.18.2 - Fabric + Forge
+        mc("1.18.2", "fabric", "forge")
     }
+    create(rootProject)
 }
 
 rootProject.name = "critical-flight-details"
