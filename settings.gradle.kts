@@ -26,21 +26,16 @@ stonecutter {
             for (loader in loaders) version("$mcVersion-$loader", mcVersion)
         }
 
-        // Minecraft 1.21.x - Latest (NeoForge era)
-        mc("1.21.4", "fabric", "neoforge")
+        // Minecraft versions - Fabric only for now
+        // NeoForge/Forge support requires additional Stonecraft configuration
+        mc("1.21.4", "fabric")
+        mc("1.20.6", "fabric")
+        mc("1.20.1", "fabric")
+        mc("1.19.4", "fabric")
+        mc("1.18.2", "fabric")
 
-        // Minecraft 1.20.x - Trails & Tales
-        mc("1.20.6", "fabric", "neoforge")  // Last 1.20.x with NeoForge
-        mc("1.20.1", "fabric")  // Note: Forge removed - Stonecraft/Architectury Loom incompatibility
-
-        // Minecraft 1.19.x - The Wild Update (MatrixStack era)
-        mc("1.19.4", "fabric")  // Fabric only - Forge not supported by Stonecraft
-
-        // Minecraft 1.18.x - Caves & Cliffs Part 2
-        mc("1.18.2", "fabric")  // Fabric only - Forge not supported by Stonecraft
-
-        // Default active version (NeoForge so root project can compile NeoForgeHudRenderer)
-        vcsVersion = "1.21.4-neoforge"
+        // Default active version
+        vcsVersion = "1.21.4-fabric"
     }
 }
 
