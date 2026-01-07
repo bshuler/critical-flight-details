@@ -5,8 +5,11 @@ import net.critical.flight_display.hud.FlightDisplayHud;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+//? if >=1.20 {
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+//?} else {
+/*import net.minecraftforge.client.event.RenderGameOverlayEvent;*///?}
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -18,6 +21,7 @@ public class ForgeHudRenderer {
         MinecraftForge.EVENT_BUS.register(new ForgeHudRenderer());
     }
 
+    //? if >=1.20 {
     @SubscribeEvent
     public void onRenderGui(RenderGuiOverlayEvent.Post event) {
         // Only render after the hotbar overlay
@@ -37,6 +41,28 @@ public class ForgeHudRenderer {
 
         flightDisplayHud.render(event.getGuiGraphics());
     }
+    //?} else {
+    /*
+    @SubscribeEvent
+    public void onRenderGui(RenderGameOverlayEvent.Post event) {
+        // Only render after the ALL element type
+        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) {
+            return;
+        }
+
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null || !client.player.isFallFlying()) {
+            return;
+        }
+
+        // Lazy initialization of the HUD
+        if (flightDisplayHud == null) {
+            flightDisplayHud = new FlightDisplayHud(client);
+        }
+
+        flightDisplayHud.render(event.getPoseStack());
+    }
+    *///?}
 }
 //?} else {
 /*

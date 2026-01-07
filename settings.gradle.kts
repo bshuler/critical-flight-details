@@ -32,6 +32,12 @@ stonecutter {
         mc("1.20.6", "fabric", "neoforge")  // Last 1.20.x with NeoForge
         mc("1.20.1", "fabric", "forge")     // Last version before NeoForge split
 
+        // Minecraft 1.19.x - The Wild Update (MatrixStack era)
+        mc("1.19.4", "fabric", "forge")
+
+        // Minecraft 1.18.x - Caves & Cliffs Part 2
+        mc("1.18.2", "fabric", "forge")
+
         // Default active version
         vcsVersion = "1.21.4-fabric"
     }

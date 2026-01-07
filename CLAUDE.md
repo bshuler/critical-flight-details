@@ -8,7 +8,7 @@
 - Visual reference lines for orientation
 
 **Supported Loaders:** Fabric, NeoForge, Forge (via Stonecraft/Stonecutter)
-**Supported Minecraft Versions:** 1.21.4, 1.20.6, 1.20.1
+**Supported Minecraft Versions:** 1.21.4, 1.20.6, 1.20.1, 1.19.4, 1.18.2
 
 ## Build System: Stonecraft + Stonecutter
 
@@ -64,7 +64,9 @@ critical-flight-details/
 │   └── dependencies/
 │       ├── 1.21.4.properties            # 1.21.4 dependencies
 │       ├── 1.20.6.properties            # 1.20.6 dependencies
-│       └── 1.20.1.properties            # 1.20.1 dependencies (Forge)
+│       ├── 1.20.1.properties            # 1.20.1 dependencies (Forge)
+│       ├── 1.19.4.properties            # 1.19.4 dependencies (MatrixStack)
+│       └── 1.18.2.properties            # 1.18.2 dependencies (MatrixStack)
 ├── .github/workflows/
 │   ├── build.yml                        # Multi-loader CI build
 │   └── release.yml                      # Multi-version release
@@ -98,13 +100,18 @@ critical-flight-details/
 
 ## Version Matrix
 
-| MC Version | Fabric | NeoForge | Forge |
-|------------|--------|----------|-------|
-| 1.21.4     | ✓      | ✓        | -     |
-| 1.20.6     | ✓      | ✓        | -     |
-| 1.20.1     | ✓      | -        | ✓     |
+| MC Version | Fabric | NeoForge | Forge | Rendering API |
+|------------|--------|----------|-------|---------------|
+| 1.21.4     | ✓      | ✓        | -     | DrawContext   |
+| 1.20.6     | ✓      | ✓        | -     | DrawContext   |
+| 1.20.1     | ✓      | -        | ✓     | DrawContext   |
+| 1.19.4     | ✓      | -        | ✓     | MatrixStack   |
+| 1.18.2     | ✓      | -        | ✓     | MatrixStack   |
 
-**Note:** NeoForge split from Forge after 1.20.1. Versions 1.20.2-1.20.4 had transitional support.
+**Notes:**
+- NeoForge split from Forge after 1.20.1. Versions 1.20.2-1.20.4 had transitional support.
+- DrawContext was introduced in 1.20. Earlier versions use MatrixStack.
+- 1.19.4 and 1.18.2 use `RenderGameOverlayEvent` (Forge) instead of `RenderGuiOverlayEvent`.
 
 ## Key Technical Patterns
 
@@ -202,6 +209,20 @@ Version-specific dependencies are stored in `versions/dependencies/`:
 |-----------|--------|-------|
 | Loader | 0.15.11 | 47.3.0 |
 | API | Fabric API 0.92.2 | - |
+| Java | 17 | 17 |
+
+**1.19.4 (MatrixStack):**
+| Component | Fabric | Forge |
+|-----------|--------|-------|
+| Loader | 0.15.11 | 45.3.0 |
+| API | Fabric API 0.87.2 | - |
+| Java | 17 | 17 |
+
+**1.18.2 (MatrixStack):**
+| Component | Fabric | Forge |
+|-----------|--------|-------|
+| Loader | 0.15.11 | 40.2.21 |
+| API | Fabric API 0.77.0 | - |
 | Java | 17 | 17 |
 
 ## Important Notes for AI Assistants

@@ -6,8 +6,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
+//? if >=1.20 {
+import net.minecraft.client.gui.DrawContext;
+//?} else {
+/*import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.font.TextRenderer;*///?}
 //?} else if neoforge {
 /*
 import net.neoforged.api.distmarker.Dist;
@@ -21,7 +25,11 @@ import com.mojang.blaze3d.vertex.*;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
+//?} else {
+import com.mojang.blaze3d.vertex.PoseStack;
+//?}
 import net.minecraft.client.renderer.*;
 import com.mojang.blaze3d.vertex.*;
 *///?}
@@ -50,7 +58,10 @@ public class FlightDisplayHud {
         this.client = client;
     }
 
+    //? if >=1.20 {
     public void render(DrawContext context) {
+    //?} else {
+    /*public void render(MatrixStack matrices) {*///?}
         if (client.player == null || client.world == null) {
             return;
         }
@@ -63,7 +74,11 @@ public class FlightDisplayHud {
         this.client = client;
     }
 
+    //? if >=1.20 {
     public void render(GuiGraphics context) {
+    //?} else {
+    public void render(PoseStack poseStack) {
+    //?}
         if (client.player == null || client.level == null) {
             return;
         }
@@ -94,28 +109,42 @@ public class FlightDisplayHud {
         // Draw pitch text
         String pitchText = String.format("Pitch: %d", (int) (-pitch));
         //? if fabric {
+        //? if >=1.20 {
         context.drawText(client.textRenderer, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR, true);
         //?} else {
-        /*context.drawString(client.font, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR, true);*///?}
+        /*client.textRenderer.drawWithShadow(matrices, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR);*///?}
+        //?} else {
+        /*//? if >=1.20 {
+        context.drawString(client.font, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR, true);
+        //?} else {
+        client.font.drawShadow(poseStack, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR);
+        //?}*///?}
 
         // Draw speed text
         String speedText = String.format("Speed: %d", speed);
         //? if fabric {
+        //? if >=1.20 {
         context.drawText(client.textRenderer, speedText, (int) left + 10, (int) bottom, RED_COLOR, true);
         //?} else {
-        /*context.drawString(client.font, speedText, (int) left + 10, (int) bottom, RED_COLOR, true);*///?}
+        /*client.textRenderer.drawWithShadow(matrices, speedText, (int) left + 10, (int) bottom, RED_COLOR);*///?}
+        //?} else {
+        /*//? if >=1.20 {
+        context.drawString(client.font, speedText, (int) left + 10, (int) bottom, RED_COLOR, true);
+        //?} else {
+        client.font.drawShadow(poseStack, speedText, (int) left + 10, (int) bottom, RED_COLOR);
+        //?}*///?}
 
         // Draw pitch indicator hash marks
         for (double hashY = top; hashY <= bottom + distanceBetweenHashes; hashY += distanceBetweenHashes) {
             double hashYOffset = hashY + pitchOffset;
             if (hashYOffset >= top && hashYOffset <= bottom) {
-                drawLine(context, (int) (left - 10), (int) hashYOffset, (int) left, (int) hashYOffset, RED_COLOR);
+                drawLine((int) (left - 10), (int) hashYOffset, (int) left, (int) hashYOffset, RED_COLOR);
             }
         }
 
         // Draw vertical reference lines
-        drawLine(context, (int) left, (int) top, (int) left, (int) bottom, RED_COLOR);
-        drawLine(context, (int) right, (int) top, (int) right, (int) bottom, GREEN_COLOR);
+        drawLine((int) left, (int) top, (int) left, (int) bottom, RED_COLOR);
+        drawLine((int) right, (int) top, (int) right, (int) bottom, GREEN_COLOR);
 
         // Calculate speed every 10 ticks
         //? if fabric {
@@ -142,7 +171,7 @@ public class FlightDisplayHud {
     }
 
     //? if fabric {
-    private void drawLine(DrawContext context, int x1, int y1, int x2, int y2, int color) {
+    private void drawLine(int x1, int y1, int x2, int y2, int color) {
         // Extract color components
         int alpha = (color >> 24) & 0xFF;
         int red = (color >> 16) & 0xFF;
@@ -155,18 +184,34 @@ public class FlightDisplayHud {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
+        //? if >=1.21 {
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
         buffer.vertex(x1, y1, 0).color(red, green, blue, alpha);
         buffer.vertex(x2, y2, 0).color(red, green, blue, alpha);
         BufferRenderer.drawWithGlobalProgram(buffer.end());
+        //?} else if >=1.20 {
+        /*RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+        buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+        buffer.vertex(x1, y1, 0).color(red, green, blue, alpha).next();
+        buffer.vertex(x2, y2, 0).color(red, green, blue, alpha).next();
+        Tessellator.getInstance().draw();*///?} else {
+        /*RenderSystem.setShader(GameRenderer::getPositionColorShader);
+
+        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+        buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+        buffer.vertex(x1, y1, 0).color(red, green, blue, alpha).next();
+        buffer.vertex(x2, y2, 0).color(red, green, blue, alpha).next();
+        Tessellator.getInstance().draw();*///?}
 
         RenderSystem.disableBlend();
     }
     //?} else {
     /*
-    private void drawLine(GuiGraphics context, int x1, int y1, int x2, int y2, int color) {
+    private void drawLine(int x1, int y1, int x2, int y2, int color) {
         // Extract color components
         int alpha = (color >> 24) & 0xFF;
         int red = (color >> 16) & 0xFF;
@@ -181,11 +226,18 @@ public class FlightDisplayHud {
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
+        //? if >=1.21 {
+        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+        buffer.addVertex(x1, y1, 0).setColor(red, green, blue, alpha);
+        buffer.addVertex(x2, y2, 0).setColor(red, green, blue, alpha);
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        //?} else {
         BufferBuilder buffer = Tesselator.getInstance().getBuilder();
         buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
         buffer.vertex(x1, y1, 0).color(red, green, blue, alpha).endVertex();
         buffer.vertex(x2, y2, 0).color(red, green, blue, alpha).endVertex();
         BufferUploader.drawWithShader(buffer.end());
+        //?}
 
         RenderSystem.disableBlend();
     }

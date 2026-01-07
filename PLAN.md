@@ -260,22 +260,22 @@ public class FlightDisplayHud {
 4. ~~Add CI/CD~~
 5. ~~Add testing framework~~
 
-### Stage 2: Multi-Loader (Current)
-6. [ ] Set up Stonecraft/Architectury project structure
-7. [ ] Create platform abstraction layer
-8. [ ] Implement Fabric loader module
-9. [ ] Implement NeoForge loader module
-10. [ ] Implement Forge loader module (1.20.1)
-11. [ ] Update CI/CD for multi-loader builds
+### Stage 2: Multi-Loader ✅ COMPLETED
+6. [x] Set up Stonecraft/Architectury project structure
+7. [x] Create platform abstraction layer
+8. [x] Implement Fabric loader module
+9. [x] Implement NeoForge loader module
+10. [x] Implement Forge loader module (1.20.1 and earlier)
+11. [x] Update CI/CD for multi-loader builds
 
-### Stage 3: Multi-Version
-12. [ ] Configure Stonecutter for version management
-13. [ ] Add 1.20.x support (DrawContext → MatrixStack swap)
-14. [ ] Add 1.19.x support
-15. [ ] Add 1.18.x support
-16. [ ] Test all version/loader combinations
+### Stage 3: Multi-Version ✅ COMPLETED
+12. [x] Configure Stonecutter for version management
+13. [x] Add 1.20.x support (1.20.6, 1.20.1)
+14. [x] Add 1.19.x support (1.19.4 with MatrixStack)
+15. [x] Add 1.18.x support (1.18.2 with MatrixStack)
+16. [ ] Test all version/loader combinations (pending CI)
 
-### Stage 4: Polish
+### Stage 4: Polish (Next)
 17. [ ] Add configuration system (Cloth Config)
 18. [ ] Add planned features (altitude, compass)
 19. [ ] Documentation and release
