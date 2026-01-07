@@ -20,9 +20,10 @@ plugins {
 stonecutter {
     centralScript = "build.gradle.kts"
     kotlinController = true
-    shared {
-        fun mc(version: String, vararg loaders: String) {
-            for (loader in loaders) vers("$version-$loader", version)
+
+    create(rootProject) {
+        fun mc(mcVersion: String, vararg loaders: String) {
+            for (loader in loaders) version("$mcVersion-$loader", mcVersion)
         }
 
         // Minecraft 1.21.x - Latest (NeoForge era)
@@ -41,7 +42,6 @@ stonecutter {
         // Default active version
         vcsVersion = "1.21.4-fabric"
     }
-    create(rootProject)
 }
 
 rootProject.name = "critical-flight-details"
