@@ -275,11 +275,11 @@ public class FlightDisplayHud {
 15. [x] Add 1.18.x support (1.18.2 with MatrixStack)
 16. [ ] Test all version/loader combinations (pending CI)
 
-### Stage 4: Polish (Next)
+### Stage 4: Polish ✅ COMPLETED
 17. [x] Add configuration system (JSON-based)
-18. [ ] Add planned features (altitude, compass)
-19. [ ] Documentation and release
-20. [ ] Publish to CurseForge and Modrinth
+18. [x] Add planned features (altitude, compass)
+19. [x] Documentation updated (CLAUDE.md)
+20. [ ] Publish to CurseForge and Modrinth (requires user action)
 
 ---
 
