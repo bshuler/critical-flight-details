@@ -1,6 +1,7 @@
 package net.critical.flight_display.hud;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.critical.flight_display.config.FlightDisplayConfig;
 
 //? if fabric {
 import net.fabricmc.api.EnvType;
@@ -39,9 +40,6 @@ import com.mojang.blaze3d.vertex.*;
 //?} else {
 /*@OnlyIn(Dist.CLIENT)*///?}
 public class FlightDisplayHud {
-    private static final int RED_COLOR = 0xFFFF0000;
-    private static final int GREEN_COLOR = 0xFF00FF00;
-
     //? if fabric {
     private final MinecraftClient client;
     //?} else {
@@ -87,16 +85,24 @@ public class FlightDisplayHud {
         int screenWidth = client.getWindow().getGuiScaledWidth();
     *///?}
 
-        double factor = 3.0;
+        // Get config
+        FlightDisplayConfig config = FlightDisplayConfig.getInstance();
 
-        double top = screenHeight / factor;
-        double left = screenWidth / factor;
-        double right = (screenWidth / factor) * (factor - 1);
-        double bottom = (screenHeight / factor) * (factor - 1);
+        // Calculate positions from config
+        double left = screenWidth * config.hudLeftPosition;
+        double right = screenWidth * config.hudRightPosition;
+        double top = screenHeight * config.hudLeftPosition;
+        double bottom = screenHeight * config.hudRightPosition;
         double middleHeight = screenHeight / 2.0;
         double heightOfDisplay = bottom - top;
         int numberOfHashes = 11;
         double distanceBetweenHashes = heightOfDisplay / numberOfHashes;
+
+        // Get colors from config
+        int pitchColor = config.pitchIndicatorColor;
+        int horizonColor = config.horizonLineColor;
+        int textColor = config.textColor;
+        boolean showShadow = config.showTextShadow;
 
         // Get player pitch
         //? if fabric {
@@ -106,53 +112,77 @@ public class FlightDisplayHud {
         int displayPitch = (int) pitch;
         double pitchOffset = (distanceBetweenHashes / 10) * (displayPitch % 10);
 
-        // Draw pitch text
-        String pitchText = String.format("Pitch: %d", (int) (-pitch));
-        //? if fabric {
-        //? if >=1.20 {
-        context.drawText(client.textRenderer, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR, true);
-        //?} else {
-        /*client.textRenderer.drawWithShadow(matrices, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR);*///?}
-        //?} else {
-        /*//? if >=1.20 {
-        context.drawString(client.font, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR, true);
-        //?} else {
-        client.font.drawShadow(poseStack, pitchText, (int) left + 10, (int) middleHeight, RED_COLOR);
-        //?}*///?}
+        // Draw pitch text (if enabled)
+        if (config.showPitchIndicator) {
+            String pitchText = String.format("Pitch: %d", (int) (-pitch));
+            //? if fabric {
+            //? if >=1.20 {
+            context.drawText(client.textRenderer, pitchText, (int) left + 10, (int) middleHeight, textColor, showShadow);
+            //?} else {
+            /*if (showShadow) {
+                client.textRenderer.drawWithShadow(matrices, pitchText, (int) left + 10, (int) middleHeight, textColor);
+            } else {
+                client.textRenderer.draw(matrices, pitchText, (int) left + 10, (int) middleHeight, textColor);
+            }*///?}
+            //?} else {
+            /*//? if >=1.20 {
+            context.drawString(client.font, pitchText, (int) left + 10, (int) middleHeight, textColor, showShadow);
+            //?} else {
+            if (showShadow) {
+                client.font.drawShadow(poseStack, pitchText, (int) left + 10, (int) middleHeight, textColor);
+            } else {
+                client.font.draw(poseStack, pitchText, (int) left + 10, (int) middleHeight, textColor);
+            }
+            //?}*///?}
+        }
 
-        // Draw speed text
-        String speedText = String.format("Speed: %d", speed);
-        //? if fabric {
-        //? if >=1.20 {
-        context.drawText(client.textRenderer, speedText, (int) left + 10, (int) bottom, RED_COLOR, true);
-        //?} else {
-        /*client.textRenderer.drawWithShadow(matrices, speedText, (int) left + 10, (int) bottom, RED_COLOR);*///?}
-        //?} else {
-        /*//? if >=1.20 {
-        context.drawString(client.font, speedText, (int) left + 10, (int) bottom, RED_COLOR, true);
-        //?} else {
-        client.font.drawShadow(poseStack, speedText, (int) left + 10, (int) bottom, RED_COLOR);
-        //?}*///?}
+        // Draw speed text (if enabled)
+        if (config.showSpeedDisplay) {
+            String speedText = String.format("Speed: %d", speed);
+            //? if fabric {
+            //? if >=1.20 {
+            context.drawText(client.textRenderer, speedText, (int) left + 10, (int) bottom, textColor, showShadow);
+            //?} else {
+            /*if (showShadow) {
+                client.textRenderer.drawWithShadow(matrices, speedText, (int) left + 10, (int) bottom, textColor);
+            } else {
+                client.textRenderer.draw(matrices, speedText, (int) left + 10, (int) bottom, textColor);
+            }*///?}
+            //?} else {
+            /*//? if >=1.20 {
+            context.drawString(client.font, speedText, (int) left + 10, (int) bottom, textColor, showShadow);
+            //?} else {
+            if (showShadow) {
+                client.font.drawShadow(poseStack, speedText, (int) left + 10, (int) bottom, textColor);
+            } else {
+                client.font.draw(poseStack, speedText, (int) left + 10, (int) bottom, textColor);
+            }
+            //?}*///?}
+        }
 
-        // Draw pitch indicator hash marks
-        for (double hashY = top; hashY <= bottom + distanceBetweenHashes; hashY += distanceBetweenHashes) {
-            double hashYOffset = hashY + pitchOffset;
-            if (hashYOffset >= top && hashYOffset <= bottom) {
-                drawLine((int) (left - 10), (int) hashYOffset, (int) left, (int) hashYOffset, RED_COLOR);
+        // Draw pitch indicator hash marks (if enabled)
+        if (config.showPitchIndicator) {
+            for (double hashY = top; hashY <= bottom + distanceBetweenHashes; hashY += distanceBetweenHashes) {
+                double hashYOffset = hashY + pitchOffset;
+                if (hashYOffset >= top && hashYOffset <= bottom) {
+                    drawLine((int) (left - 10), (int) hashYOffset, (int) left, (int) hashYOffset, pitchColor);
+                }
             }
         }
 
-        // Draw vertical reference lines
-        drawLine((int) left, (int) top, (int) left, (int) bottom, RED_COLOR);
-        drawLine((int) right, (int) top, (int) right, (int) bottom, GREEN_COLOR);
+        // Draw vertical reference lines (if enabled)
+        if (config.showHorizonLines) {
+            drawLine((int) left, (int) top, (int) left, (int) bottom, pitchColor);
+            drawLine((int) right, (int) top, (int) right, (int) bottom, horizonColor);
+        }
 
-        // Calculate speed every 10 ticks
+        // Calculate speed every N ticks (from config)
         //? if fabric {
         long currentTime = client.world.getTime();
         //?} else {
         /*long currentTime = client.level.getGameTime();*///?}
 
-        if (currentTime > lastTime + 10) {
+        if (currentTime > lastTime + config.speedUpdateInterval) {
             double dx = client.player.getX() - lastX;
             double dy = client.player.getY() - lastY;
             double dz = client.player.getZ() - lastZ;

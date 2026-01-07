@@ -51,6 +51,8 @@ critical-flight-details/
 │   │   ├── FlightDisplayClient.java     # Entry point (multi-loader)
 │   │   ├── NeoForgeHudRenderer.java     # NeoForge event handler
 │   │   ├── ForgeHudRenderer.java        # Forge event handler (1.20.1)
+│   │   ├── config/
+│   │   │   └── FlightDisplayConfig.java # Configuration (JSON-based)
 │   │   ├── hud/
 │   │   │   └── FlightDisplayHud.java    # HUD rendering (multi-loader)
 │   │   └── mixin/
@@ -165,6 +167,34 @@ Stonecutter preprocessor comments handle all differences automatically.
 - Mod metadata in `gradle.properties`
 - Version-specific deps in `versions/dependencies/*.properties`
 - Changelog in `CHANGELOG.md`
+
+## Configuration
+
+The mod uses a simple JSON configuration file stored in the config directory:
+- **Fabric**: `.minecraft/config/flight_display.json`
+- **Forge/NeoForge**: `.minecraft/config/flight_display.json`
+
+### Configuration Options
+
+```json
+{
+  "showPitchIndicator": true,     // Show pitch indicator and hash marks
+  "showSpeedDisplay": true,       // Show speed display
+  "showHorizonLines": true,       // Show vertical reference lines
+  "hudLeftPosition": 0.333,       // Left edge position (0.0-1.0)
+  "hudRightPosition": 0.667,      // Right edge position (0.0-1.0)
+  "pitchIndicatorColor": -65536,  // Pitch indicator color (ARGB)
+  "horizonLineColor": -16711936,  // Horizon line color (ARGB)
+  "textColor": -65536,            // Text color (ARGB)
+  "showTextShadow": true,         // Show shadow behind text
+  "speedUpdateInterval": 10       // Ticks between speed updates
+}
+```
+
+### Configuration Class
+- Located at: `net.critical.flight_display.config.FlightDisplayConfig`
+- Uses Gson for JSON serialization
+- Supports live reload via `FlightDisplayConfig.reload()`
 
 ## CI/CD Pipeline
 

@@ -4,11 +4,13 @@ package net.critical.flight_display;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.loader.api.FabricLoader;
 //?} else if neoforge {
 /*
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 *///?} else if forge {
@@ -16,10 +18,12 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 *///?}
 
+import net.critical.flight_display.config.FlightDisplayConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +72,15 @@ public class FlightDisplayClient {
     *///?}
 
     public static void init() {
+        // Initialize configuration
+        //? if fabric {
+        FlightDisplayConfig.setConfigPath(FabricLoader.getInstance().getConfigDir());
+        //?} else {
+        /*FlightDisplayConfig.setConfigPath(FMLPaths.CONFIGDIR.get());*///?}
+
+        // Load config
+        FlightDisplayConfig.getInstance();
+
         LOGGER.info("Critical Flight Display mod initialized");
     }
 }
