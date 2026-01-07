@@ -9,7 +9,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 //?} else {
-/*import net.minecraftforge.client.event.RenderGameOverlayEvent;*///?}
+/*import net.minecraftforge.client.event.RenderGameOverlayEvent;
+*///?}
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 

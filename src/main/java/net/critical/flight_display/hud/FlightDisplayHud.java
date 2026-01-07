@@ -26,13 +26,13 @@ import com.mojang.blaze3d.vertex.*;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.*;
+import com.mojang.blaze3d.vertex.*;
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?} else {
 import com.mojang.blaze3d.vertex.PoseStack;
 //?}
-import net.minecraft.client.renderer.*;
-import com.mojang.blaze3d.vertex.*;
 *///?}
 
 //? if fabric {
@@ -363,7 +363,7 @@ public class FlightDisplayHud {
         buffer.vertex(x1, y1, 0).color(red, green, blue, alpha).next();
         buffer.vertex(x2, y2, 0).color(red, green, blue, alpha).next();
         Tessellator.getInstance().draw();*///?} else {
-        /*RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        /*RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 
         BufferBuilder buffer = Tessellator.getInstance().getBuffer();
         buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
