@@ -1,25 +1,39 @@
-# gradle
-
+# Gradle
 .gradle/
 build/
 out/
 classes/
 
-# idea
-
+# IDE - IntelliJ IDEA
 .idea/
 *.iml
 *.ipr
 *.iws
 
-# vscode
-
+# IDE - VSCode
 .settings/
 .vscode/
 bin/
 .classpath
 .project
 
-# fabric
+# IDE - Eclipse
+eclipse/
 
+# Fabric/Minecraft
 run/
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Local configuration
+local.properties
+*.local
+
+# Secrets (never commit these)
+.env
+*.env.local
+secrets.json
