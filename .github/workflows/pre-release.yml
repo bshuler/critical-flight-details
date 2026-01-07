@@ -41,7 +41,7 @@ jobs:
         echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
 
     - name: Build all versions (Stonecutter)
-      run: ./gradlew chiseledBuild
+      run: ./gradlew chiseledBuild -x :compileJava -x :jar -x :processResources
 
     - name: Run tests
       run: ./gradlew test
@@ -107,13 +107,13 @@ jobs:
 
           ### Included Builds
 
-          | Minecraft | Fabric | NeoForge | Forge |
-          |-----------|--------|----------|-------|
-          | 1.21.4    | ✅     | ✅       | -     |
-          | 1.20.6    | ✅     | ✅       | -     |
-          | 1.20.1    | ✅     | -        | ✅    |
-          | 1.19.4    | ✅     | -        | ✅    |
-          | 1.18.2    | ✅     | -        | ✅    |
+          | Minecraft | Fabric | NeoForge |
+          |-----------|--------|----------|
+          | 1.21.4    | ✅     | ✅       |
+          | 1.20.6    | ✅     | ✅       |
+          | 1.20.1    | ✅     | -        |
+          | 1.19.4    | ✅     | -        |
+          | 1.18.2    | ✅     | -        |
 
           ### Installation
           1. Download the JAR matching your Minecraft version and mod loader
@@ -123,7 +123,6 @@ jobs:
           ### File Naming Convention
           - `critical-flight-details-X.X.X+fabric-1.21.4.jar` → Fabric for MC 1.21.4
           - `critical-flight-details-X.X.X+neoforge-1.21.4.jar` → NeoForge for MC 1.21.4
-          - `critical-flight-details-X.X.X+forge-1.20.1.jar` → Forge for MC 1.20.1
         files: release-jars/*.jar
         prerelease: true
         generate_release_notes: false

@@ -39,8 +39,8 @@ stonecutter {
         // Minecraft 1.18.x - Caves & Cliffs Part 2
         mc("1.18.2", "fabric")  // Fabric only - Forge not supported by Stonecraft
 
-        // Default active version
-        vcsVersion = "1.21.4-fabric"
+        // Default active version (NeoForge so root project can compile NeoForgeHudRenderer)
+        vcsVersion = "1.21.4-neoforge"
     }
 }
 
