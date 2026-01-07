@@ -355,7 +355,7 @@ public class FlightDisplayHud {
         buffer.vertex(x1, y1, 0).color(red, green, blue, alpha);
         buffer.vertex(x2, y2, 0).color(red, green, blue, alpha);
         BufferRenderer.drawWithGlobalProgram(buffer.end());
-        //?} else if >=1.20 {
+        //?} else if >=1.19.3 {
         /*RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 
         BufferBuilder buffer = Tessellator.getInstance().getBuffer();
@@ -363,7 +363,7 @@ public class FlightDisplayHud {
         buffer.vertex(x1, y1, 0).color(red, green, blue, alpha).next();
         buffer.vertex(x2, y2, 0).color(red, green, blue, alpha).next();
         Tessellator.getInstance().draw();*///?} else {
-        /*RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        /*RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
         BufferBuilder buffer = Tessellator.getInstance().getBuffer();
         buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
