@@ -2,7 +2,7 @@ name: Pre-Release (Test Builds)
 
 on:
   push:
-    branches: [ dev, test ]
+    branches: [ dev, test, 'claude/**' ]
   workflow_dispatch:
     inputs:
       prerelease_tag:
