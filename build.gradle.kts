@@ -31,3 +31,12 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+// Fix Gradle 9 task dependency issue for Forge builds
+// compileTestJava needs to depend on generatePackMCMetaJson output
+tasks.matching { it.name == "compileTestJava" }.configureEach {
+    val generateTask = tasks.findByName("generatePackMCMetaJson")
+    if (generateTask != null) {
+        dependsOn(generateTask)
+    }
+}
