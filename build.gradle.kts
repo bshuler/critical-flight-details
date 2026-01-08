@@ -4,6 +4,17 @@ plugins {
     id("gg.meza.stonecraft")
 }
 
+// Configure Java toolchain based on Minecraft version
+// 1.20.5+ requires Java 21, older versions use Java 17
+val mcVersion = mod.minecraftVersion
+val javaVersion = if (mcVersion >= "1.20.5") 21 else 17
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(javaVersion))
+    }
+}
+
 // Publishing configuration for CurseForge and Modrinth
 publishMods {
     modrinth {
