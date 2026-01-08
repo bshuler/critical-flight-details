@@ -7,7 +7,10 @@
       "WebFetch(domain:maven.neoforged.net)",
       "WebFetch(domain:stonecraft.meza.gg)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:maven.fabricmc.net)"
+      "WebFetch(domain:maven.fabricmc.net)",
+      "WebFetch(domain:minecraft.wiki)",
+      "WebFetch(domain:fabricmc.net)",
+      "WebFetch(domain:projects.neoforged.net)"
     ]
   }
 }

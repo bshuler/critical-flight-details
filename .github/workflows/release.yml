@@ -197,16 +197,10 @@ jobs:
             featured: false
           - mc_version: "1.21"
             featured: false
-          # 1.20.x (1.20.2+ have NeoForge)
+          # 1.20.x (1.20.5+ have NeoForge with supported toolchain)
           - mc_version: "1.20.6"
             featured: false
           - mc_version: "1.20.5"
-            featured: false
-          - mc_version: "1.20.4"
-            featured: false
-          - mc_version: "1.20.3"
-            featured: false
-          - mc_version: "1.20.2"
             featured: false
 
     steps:
@@ -259,7 +253,7 @@ jobs:
           - mc_version: "1.20.2"
           - mc_version: "1.20.1"
           - mc_version: "1.20"
-          # Legacy
+          # Legacy (1.19.4, 1.18.2)
           - mc_version: "1.19.4"
           - mc_version: "1.18.2"
 
