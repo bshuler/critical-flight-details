@@ -7,7 +7,12 @@ plugins {
 // Configure Java toolchain based on Minecraft version
 // 1.20.5+ requires Java 21, older versions use Java 17
 val mcVersion = mod.minecraftVersion
-val javaVersion = if (mcVersion >= "1.20.5") 21 else 17
+val versionParts = mcVersion.split(".")
+val major = versionParts[0].toIntOrNull() ?: 1
+val minor = versionParts.getOrNull(1)?.toIntOrNull() ?: 0
+val patch = versionParts.getOrNull(2)?.toIntOrNull() ?: 0
+// 1.20.5+ requires Java 21
+val javaVersion = if (major > 1 || (minor > 20) || (minor == 20 && patch >= 5)) 21 else 17
 
 java {
     toolchain {
