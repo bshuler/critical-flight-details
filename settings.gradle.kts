@@ -29,8 +29,7 @@ stonecutter {
         // ===== 1.21.x (Fabric + NeoForge) =====
         // NOTE: 1.21.2+ have significant API changes (isFallFlying, RenderSystem,
         // GameRenderer shaders) that require additional Stonecutter conditionals.
-        // Currently supporting 1.21-1.21.1 and the original 1.21.4 target.
-        mc("1.21.4", "fabric", "neoforge")
+        // Only 1.21 and 1.21.1 work with current codebase.
         mc("1.21.1", "fabric", "neoforge")
         mc("1.21", "fabric", "neoforge")
 
