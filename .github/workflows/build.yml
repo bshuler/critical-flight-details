@@ -2,13 +2,17 @@ name: Build
 
 on:
   push:
-    branches: [ dev, test, main ]
+    branches: [ '**' ]  # All branches
   pull_request:
-    branches: [ dev, test, main ]
+    branches: [ dev, test, main, master ]
+  workflow_dispatch:  # Allow manual triggers
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.properties.outputs.version }}
+      branch: ${{ steps.branch.outputs.branch }}
 
     steps:
     - name: Checkout repository
@@ -28,6 +32,18 @@ jobs:
 
     - name: Make gradlew executable
       run: chmod +x ./gradlew
+
+    - name: Get mod version
+      id: properties
+      run: |
+        echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
+
+    - name: Get branch name
+      id: branch
+      run: |
+        BRANCH_NAME=${GITHUB_REF#refs/heads/}
+        BRANCH_NAME=${BRANCH_NAME//\//-}
+        echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
     - name: Build all versions (Stonecutter)
       run: ./gradlew chiseledBuild
@@ -83,3 +99,82 @@ jobs:
         name: test-results
         path: build/reports/tests/
         retention-days: 7
+
+  # Dev/Test release - creates a pre-release for non-main branches
+  dev-release:
+    runs-on: ubuntu-latest
+    needs: [build, test]
+    # Only run on push (not PR), and not on main/master (those go through release.yml)
+    if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download Fabric artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: fabric-jars
+        path: jars/fabric/
+
+    - name: Download NeoForge artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: neoforge-jars
+        path: jars/neoforge/
+
+    - name: Download Forge artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: forge-jars
+        path: jars/forge/
+
+    - name: Get branch name
+      id: branch
+      run: |
+        BRANCH_NAME=${GITHUB_REF#refs/heads/}
+        BRANCH_SAFE=${BRANCH_NAME//\//-}
+        echo "name=$BRANCH_SAFE" >> $GITHUB_OUTPUT
+        echo "original=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+    - name: Get mod version
+      id: version
+      run: |
+        echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
+
+    - name: Get short SHA
+      id: sha
+      run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Delete existing dev release for this branch
+      run: |
+        gh release delete "dev-${{ steps.branch.outputs.name }}" --yes || true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create Dev Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: "dev-${{ steps.branch.outputs.name }}"
+        name: "Dev Build - ${{ steps.branch.outputs.original }} (${{ steps.sha.outputs.short }})"
+        body: |
+          ## Development Build
+
+          **Branch:** `${{ steps.branch.outputs.original }}`
+          **Version:** `${{ steps.version.outputs.version }}`
+          **Commit:** `${{ github.sha }}`
+
+          This is an automated development build. Use at your own risk.
+
+          ### Supported Versions
+          - **1.21.x:** Fabric + NeoForge
+          - **1.20.5-1.20.6:** Fabric + NeoForge
+          - **1.20.2-1.20.4:** Fabric + NeoForge + Forge
+          - **1.20-1.20.1:** Fabric + Forge
+          - **1.19.4, 1.18.2:** Fabric + Forge
+        files: |
+          jars/**/*.jar
+        prerelease: true
+        generate_release_notes: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,4 +1,4 @@
-//? if forge && >=1.20 {
+//? if forge && >=1.19.3 {
 /*package net.critical.flight_display;
 
 import net.critical.flight_display.hud.FlightDisplayHud;
@@ -33,7 +33,11 @@ public class ForgeHudRenderer {
             flightDisplayHud = new FlightDisplayHud(client);
         }
 
-        flightDisplayHud.render(event.getGuiGraphics());
+        //? if >=1.20 {
+        /*flightDisplayHud.render(event.getGuiGraphics());
+        *///?} else {
+        flightDisplayHud.render(event.getPoseStack());
+        //?}
     }
 }
 *///?} elif forge {

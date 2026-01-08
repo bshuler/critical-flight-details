@@ -26,12 +26,33 @@ stonecutter {
         }
 
         // Target versions and loaders
-        // Latest (1.21.4) - Fabric + NeoForge
+        // ===== 1.21.x (Fabric + NeoForge) =====
+        mc("1.21.11", "fabric", "neoforge")
+        mc("1.21.10", "fabric", "neoforge")
+        mc("1.21.9", "fabric", "neoforge")
+        mc("1.21.8", "fabric", "neoforge")
+        mc("1.21.7", "fabric", "neoforge")
+        mc("1.21.6", "fabric", "neoforge")
+        mc("1.21.5", "fabric", "neoforge")
         mc("1.21.4", "fabric", "neoforge")
-        // 1.20.6 - Fabric + NeoForge (both available)
+        mc("1.21.3", "fabric", "neoforge")
+        mc("1.21.2", "fabric", "neoforge")
+        mc("1.21.1", "fabric", "neoforge")
+        mc("1.21", "fabric", "neoforge")
+
+        // ===== 1.20.x =====
+        // 1.20.5-1.20.6: Fabric + NeoForge (stable NeoForge era)
         mc("1.20.6", "fabric", "neoforge")
-        // 1.20.1 - Fabric + Forge (last major Forge version before NeoForge split)
+        mc("1.20.5", "fabric", "neoforge")
+        // 1.20.2-1.20.4: Fabric + NeoForge + Forge (transitional period)
+        mc("1.20.4", "fabric", "neoforge", "forge")
+        mc("1.20.3", "fabric", "neoforge", "forge")
+        mc("1.20.2", "fabric", "neoforge", "forge")
+        // 1.20-1.20.1: Fabric + Forge (pre-NeoForge split)
         mc("1.20.1", "fabric", "forge")
+        mc("1.20", "fabric", "forge")
+
+        // ===== Legacy versions =====
         // 1.19.4 - Fabric + Forge
         mc("1.19.4", "fabric", "forge")
         // 1.18.2 - Fabric + Forge

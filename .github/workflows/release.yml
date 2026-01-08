@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
     tags:
       - 'v*'
 
@@ -69,11 +69,62 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Publish Fabric builds for all supported MC versions
-  publish-fabric-1-21-4:
+  # ==========================================
+  # Fabric Publish Jobs (Matrix)
+  # ==========================================
+  publish-fabric:
     runs-on: ubuntu-latest
     needs: [build, release]
     if: startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 1.21.x
+          - mc_version: "1.21.11"
+            featured: true
+          - mc_version: "1.21.10"
+            featured: false
+          - mc_version: "1.21.9"
+            featured: false
+          - mc_version: "1.21.8"
+            featured: false
+          - mc_version: "1.21.7"
+            featured: false
+          - mc_version: "1.21.6"
+            featured: false
+          - mc_version: "1.21.5"
+            featured: false
+          - mc_version: "1.21.4"
+            featured: false
+          - mc_version: "1.21.3"
+            featured: false
+          - mc_version: "1.21.2"
+            featured: false
+          - mc_version: "1.21.1"
+            featured: false
+          - mc_version: "1.21"
+            featured: false
+          # 1.20.x
+          - mc_version: "1.20.6"
+            featured: false
+          - mc_version: "1.20.5"
+            featured: false
+          - mc_version: "1.20.4"
+            featured: false
+          - mc_version: "1.20.3"
+            featured: false
+          - mc_version: "1.20.2"
+            featured: false
+          - mc_version: "1.20.1"
+            featured: false
+          - mc_version: "1.20"
+            featured: false
+          # Legacy
+          - mc_version: "1.19.4"
+            featured: false
+          - mc_version: "1.18.2"
+            featured: false
 
     steps:
     - name: Checkout repository
@@ -90,30 +141,73 @@ jobs:
       run: |
         echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
 
-    - name: Publish Fabric 1.21.4 to Modrinth and CurseForge
+    - name: Publish Fabric ${{ matrix.mc_version }} to Modrinth and CurseForge
       uses: Kir-Antipov/mc-publish@v3.3
       with:
         modrinth-id: ${{ secrets.MODRINTH_ID }}
         modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-        modrinth-featured: true
+        modrinth-featured: ${{ matrix.featured }}
         curseforge-id: ${{ secrets.CURSEFORGE_ID }}
         curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-        name: "Critical Flight Display v${{ steps.version.outputs.version }} (Fabric 1.21.4)"
-        version: "${{ steps.version.outputs.version }}+fabric-1.21.4"
+        name: "Critical Flight Display v${{ steps.version.outputs.version }} (Fabric ${{ matrix.mc_version }})"
+        version: "${{ steps.version.outputs.version }}+fabric-${{ matrix.mc_version }}"
         version-type: release
         loaders: fabric
-        game-versions: "1.21.4"
+        game-versions: "${{ matrix.mc_version }}"
         dependencies: |
           fabric-api | depends | *
         changelog-file: CHANGELOG.md
-        files: jars/1.21.4-fabric/build/libs/!(*-sources).jar
+        files: jars/${{ matrix.mc_version }}-fabric/build/libs/!(*-sources).jar
         retry-attempts: 3
         retry-delay: 30000
 
-  publish-fabric-1-20-6:
+  # ==========================================
+  # NeoForge Publish Jobs (Matrix)
+  # ==========================================
+  publish-neoforge:
     runs-on: ubuntu-latest
     needs: [build, release]
     if: startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 1.21.x (all have NeoForge)
+          - mc_version: "1.21.11"
+            featured: true
+          - mc_version: "1.21.10"
+            featured: false
+          - mc_version: "1.21.9"
+            featured: false
+          - mc_version: "1.21.8"
+            featured: false
+          - mc_version: "1.21.7"
+            featured: false
+          - mc_version: "1.21.6"
+            featured: false
+          - mc_version: "1.21.5"
+            featured: false
+          - mc_version: "1.21.4"
+            featured: false
+          - mc_version: "1.21.3"
+            featured: false
+          - mc_version: "1.21.2"
+            featured: false
+          - mc_version: "1.21.1"
+            featured: false
+          - mc_version: "1.21"
+            featured: false
+          # 1.20.x (1.20.2+ have NeoForge)
+          - mc_version: "1.20.6"
+            featured: false
+          - mc_version: "1.20.5"
+            featured: false
+          - mc_version: "1.20.4"
+            featured: false
+          - mc_version: "1.20.3"
+            featured: false
+          - mc_version: "1.20.2"
+            featured: false
 
     steps:
     - name: Checkout repository
@@ -130,106 +224,44 @@ jobs:
       run: |
         echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
 
-    - name: Publish Fabric 1.20.6 to Modrinth and CurseForge
+    - name: Publish NeoForge ${{ matrix.mc_version }} to Modrinth and CurseForge
       uses: Kir-Antipov/mc-publish@v3.3
       with:
         modrinth-id: ${{ secrets.MODRINTH_ID }}
         modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+        modrinth-featured: ${{ matrix.featured }}
         curseforge-id: ${{ secrets.CURSEFORGE_ID }}
         curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-        name: "Critical Flight Display v${{ steps.version.outputs.version }} (Fabric 1.20.6)"
-        version: "${{ steps.version.outputs.version }}+fabric-1.20.6"
-        version-type: release
-        loaders: fabric
-        game-versions: "1.20.6"
-        dependencies: |
-          fabric-api | depends | *
-        changelog-file: CHANGELOG.md
-        files: jars/1.20.6-fabric/build/libs/!(*-sources).jar
-        retry-attempts: 3
-        retry-delay: 30000
-
-  publish-fabric-1-20-1:
-    runs-on: ubuntu-latest
-    needs: [build, release]
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: all-jars
-        path: jars/
-
-    - name: Get mod version
-      id: version
-      run: |
-        echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
-
-    - name: Publish Fabric 1.20.1 to Modrinth and CurseForge
-      uses: Kir-Antipov/mc-publish@v3.3
-      with:
-        modrinth-id: ${{ secrets.MODRINTH_ID }}
-        modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-        curseforge-id: ${{ secrets.CURSEFORGE_ID }}
-        curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-        name: "Critical Flight Display v${{ steps.version.outputs.version }} (Fabric 1.20.1)"
-        version: "${{ steps.version.outputs.version }}+fabric-1.20.1"
-        version-type: release
-        loaders: fabric
-        game-versions: "1.20.1"
-        dependencies: |
-          fabric-api | depends | *
-        changelog-file: CHANGELOG.md
-        files: jars/1.20.1-fabric/build/libs/!(*-sources).jar
-        retry-attempts: 3
-        retry-delay: 30000
-
-  # Publish NeoForge builds (1.20.5+ only)
-  publish-neoforge-1-21-4:
-    runs-on: ubuntu-latest
-    needs: [build, release]
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: all-jars
-        path: jars/
-
-    - name: Get mod version
-      id: version
-      run: |
-        echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
-
-    - name: Publish NeoForge 1.21.4 to Modrinth and CurseForge
-      uses: Kir-Antipov/mc-publish@v3.3
-      with:
-        modrinth-id: ${{ secrets.MODRINTH_ID }}
-        modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-        curseforge-id: ${{ secrets.CURSEFORGE_ID }}
-        curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-        name: "Critical Flight Display v${{ steps.version.outputs.version }} (NeoForge 1.21.4)"
-        version: "${{ steps.version.outputs.version }}+neoforge-1.21.4"
+        name: "Critical Flight Display v${{ steps.version.outputs.version }} (NeoForge ${{ matrix.mc_version }})"
+        version: "${{ steps.version.outputs.version }}+neoforge-${{ matrix.mc_version }}"
         version-type: release
         loaders: neoforge
-        game-versions: "1.21.4"
+        game-versions: "${{ matrix.mc_version }}"
         changelog-file: CHANGELOG.md
-        files: jars/1.21.4-neoforge/build/libs/!(*-sources).jar
+        files: jars/${{ matrix.mc_version }}-neoforge/build/libs/!(*-sources).jar
         retry-attempts: 3
         retry-delay: 30000
 
-  publish-neoforge-1-20-6:
+  # ==========================================
+  # Forge Publish Jobs (Matrix)
+  # ==========================================
+  publish-forge:
     runs-on: ubuntu-latest
     needs: [build, release]
     if: startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 1.20.x (1.20-1.20.4 have Forge)
+          - mc_version: "1.20.4"
+          - mc_version: "1.20.3"
+          - mc_version: "1.20.2"
+          - mc_version: "1.20.1"
+          - mc_version: "1.20"
+          # Legacy
+          - mc_version: "1.19.4"
+          - mc_version: "1.18.2"
 
     steps:
     - name: Checkout repository
@@ -246,211 +278,19 @@ jobs:
       run: |
         echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
 
-    - name: Publish NeoForge 1.20.6 to Modrinth and CurseForge
+    - name: Publish Forge ${{ matrix.mc_version }} to Modrinth and CurseForge
       uses: Kir-Antipov/mc-publish@v3.3
       with:
         modrinth-id: ${{ secrets.MODRINTH_ID }}
         modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
         curseforge-id: ${{ secrets.CURSEFORGE_ID }}
         curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-        name: "Critical Flight Display v${{ steps.version.outputs.version }} (NeoForge 1.20.6)"
-        version: "${{ steps.version.outputs.version }}+neoforge-1.20.6"
-        version-type: release
-        loaders: neoforge
-        game-versions: "1.20.6"
-        changelog-file: CHANGELOG.md
-        files: jars/1.20.6-neoforge/build/libs/!(*-sources).jar
-        retry-attempts: 3
-        retry-delay: 30000
-
-  # Publish Forge builds (pre-NeoForge era: 1.20.1 and earlier)
-  publish-forge-1-20-1:
-    runs-on: ubuntu-latest
-    needs: [build, release]
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: all-jars
-        path: jars/
-
-    - name: Get mod version
-      id: version
-      run: |
-        echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
-
-    - name: Publish Forge 1.20.1 to Modrinth and CurseForge
-      uses: Kir-Antipov/mc-publish@v3.3
-      with:
-        modrinth-id: ${{ secrets.MODRINTH_ID }}
-        modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-        curseforge-id: ${{ secrets.CURSEFORGE_ID }}
-        curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-        name: "Critical Flight Display v${{ steps.version.outputs.version }} (Forge 1.20.1)"
-        version: "${{ steps.version.outputs.version }}+forge-1.20.1"
+        name: "Critical Flight Display v${{ steps.version.outputs.version }} (Forge ${{ matrix.mc_version }})"
+        version: "${{ steps.version.outputs.version }}+forge-${{ matrix.mc_version }}"
         version-type: release
         loaders: forge
-        game-versions: "1.20.1"
+        game-versions: "${{ matrix.mc_version }}"
         changelog-file: CHANGELOG.md
-        files: jars/1.20.1-forge/build/libs/!(*-sources).jar
-        retry-attempts: 3
-        retry-delay: 30000
-
-  # Minecraft 1.19.4 (The Wild Update)
-  publish-fabric-1-19-4:
-    runs-on: ubuntu-latest
-    needs: [build, release]
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: all-jars
-        path: jars/
-
-    - name: Get mod version
-      id: version
-      run: |
-        echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
-
-    - name: Publish Fabric 1.19.4 to Modrinth and CurseForge
-      uses: Kir-Antipov/mc-publish@v3.3
-      with:
-        modrinth-id: ${{ secrets.MODRINTH_ID }}
-        modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-        curseforge-id: ${{ secrets.CURSEFORGE_ID }}
-        curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-        name: "Critical Flight Display v${{ steps.version.outputs.version }} (Fabric 1.19.4)"
-        version: "${{ steps.version.outputs.version }}+fabric-1.19.4"
-        version-type: release
-        loaders: fabric
-        game-versions: "1.19.4"
-        dependencies: |
-          fabric-api | depends | *
-        changelog-file: CHANGELOG.md
-        files: jars/1.19.4-fabric/build/libs/!(*-sources).jar
-        retry-attempts: 3
-        retry-delay: 30000
-
-  publish-forge-1-19-4:
-    runs-on: ubuntu-latest
-    needs: [build, release]
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: all-jars
-        path: jars/
-
-    - name: Get mod version
-      id: version
-      run: |
-        echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
-
-    - name: Publish Forge 1.19.4 to Modrinth and CurseForge
-      uses: Kir-Antipov/mc-publish@v3.3
-      with:
-        modrinth-id: ${{ secrets.MODRINTH_ID }}
-        modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-        curseforge-id: ${{ secrets.CURSEFORGE_ID }}
-        curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-        name: "Critical Flight Display v${{ steps.version.outputs.version }} (Forge 1.19.4)"
-        version: "${{ steps.version.outputs.version }}+forge-1.19.4"
-        version-type: release
-        loaders: forge
-        game-versions: "1.19.4"
-        changelog-file: CHANGELOG.md
-        files: jars/1.19.4-forge/build/libs/!(*-sources).jar
-        retry-attempts: 3
-        retry-delay: 30000
-
-  # Minecraft 1.18.2 (Caves & Cliffs Part 2)
-  publish-fabric-1-18-2:
-    runs-on: ubuntu-latest
-    needs: [build, release]
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: all-jars
-        path: jars/
-
-    - name: Get mod version
-      id: version
-      run: |
-        echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
-
-    - name: Publish Fabric 1.18.2 to Modrinth and CurseForge
-      uses: Kir-Antipov/mc-publish@v3.3
-      with:
-        modrinth-id: ${{ secrets.MODRINTH_ID }}
-        modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-        curseforge-id: ${{ secrets.CURSEFORGE_ID }}
-        curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-        name: "Critical Flight Display v${{ steps.version.outputs.version }} (Fabric 1.18.2)"
-        version: "${{ steps.version.outputs.version }}+fabric-1.18.2"
-        version-type: release
-        loaders: fabric
-        game-versions: "1.18.2"
-        dependencies: |
-          fabric-api | depends | *
-        changelog-file: CHANGELOG.md
-        files: jars/1.18.2-fabric/build/libs/!(*-sources).jar
-        retry-attempts: 3
-        retry-delay: 30000
-
-  publish-forge-1-18-2:
-    runs-on: ubuntu-latest
-    needs: [build, release]
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: all-jars
-        path: jars/
-
-    - name: Get mod version
-      id: version
-      run: |
-        echo "version=$(grep 'mod_version' gradle.properties | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_OUTPUT
-
-    - name: Publish Forge 1.18.2 to Modrinth and CurseForge
-      uses: Kir-Antipov/mc-publish@v3.3
-      with:
-        modrinth-id: ${{ secrets.MODRINTH_ID }}
-        modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-        curseforge-id: ${{ secrets.CURSEFORGE_ID }}
-        curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-        name: "Critical Flight Display v${{ steps.version.outputs.version }} (Forge 1.18.2)"
-        version: "${{ steps.version.outputs.version }}+forge-1.18.2"
-        version-type: release
-        loaders: forge
-        game-versions: "1.18.2"
-        changelog-file: CHANGELOG.md
-        files: jars/1.18.2-forge/build/libs/!(*-sources).jar
+        files: jars/${{ matrix.mc_version }}-forge/build/libs/!(*-sources).jar
         retry-attempts: 3
         retry-delay: 30000

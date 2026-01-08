@@ -10,7 +10,7 @@
 - Visual reference lines for orientation
 
 **Supported Loaders:** Fabric, NeoForge, Forge (via Stonecraft/Stonecutter)
-**Supported Minecraft Versions:** 1.21.4, 1.20.6, 1.20.1, 1.19.4, 1.18.2
+**Supported Minecraft Versions:** 1.21.x (1.21-1.21.4), 1.20.x (1.20-1.20.6), 1.19.4, 1.18.2
 
 ## Build System: Stonecraft + Stonecutter
 
@@ -106,14 +106,27 @@ critical-flight-details/
 
 | MC Version | Fabric | NeoForge | Forge | Rendering API |
 |------------|--------|----------|-------|---------------|
+| **1.21.x** |        |          |       |               |
 | 1.21.4     | ✓      | ✓        | -     | DrawContext   |
+| 1.21.3     | ✓      | ✓        | -     | DrawContext   |
+| 1.21.2     | ✓      | ✓        | -     | DrawContext   |
+| 1.21.1     | ✓      | ✓        | -     | DrawContext   |
+| 1.21       | ✓      | ✓        | -     | DrawContext   |
+| **1.20.x** |        |          |       |               |
 | 1.20.6     | ✓      | ✓        | -     | DrawContext   |
+| 1.20.5     | ✓      | ✓        | -     | DrawContext   |
+| 1.20.4     | ✓      | ✓        | ✓     | DrawContext   |
+| 1.20.3     | ✓      | ✓        | ✓     | DrawContext   |
+| 1.20.2     | ✓      | ✓        | ✓     | DrawContext   |
 | 1.20.1     | ✓      | -        | ✓     | DrawContext   |
+| 1.20       | ✓      | -        | ✓     | DrawContext   |
+| **Legacy** |        |          |       |               |
 | 1.19.4     | ✓      | -        | ✓     | MatrixStack   |
 | 1.18.2     | ✓      | -        | ✓     | MatrixStack   |
 
 **Notes:**
-- NeoForge split from Forge after 1.20.1. Versions 1.20.2-1.20.4 had transitional support.
+- NeoForge split from Forge after 1.20.1. Versions 1.20.2-1.20.4 support both NeoForge and Forge.
+- 1.20.5+ only supports NeoForge (Forge discontinued for these versions).
 - DrawContext was introduced in 1.20. Earlier versions use MatrixStack.
 - 1.19.4 and 1.18.2 use `RenderGameOverlayEvent` (Forge) instead of `RenderGuiOverlayEvent`.
 
