@@ -41,9 +41,10 @@ stonecutter {
         mc("1.21", "fabric", "neoforge")
 
         // ===== 1.20.x =====
-        // 1.20.5-1.20.6: Fabric + NeoForge (stable NeoForge era)
+        // 1.20.6: Fabric + NeoForge (stable NeoForge era)
         mc("1.20.6", "fabric", "neoforge")
-        mc("1.20.5", "fabric", "neoforge")
+        // 1.20.5: Fabric only (NeoForge has Java version resolution issues)
+        mc("1.20.5", "fabric")
         // 1.20.2-1.20.4: Fabric only (Forge toolchain not supported by Loom)
         mc("1.20.4", "fabric")
         mc("1.20.3", "fabric")
