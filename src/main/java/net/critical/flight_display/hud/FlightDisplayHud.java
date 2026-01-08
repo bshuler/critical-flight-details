@@ -3,7 +3,7 @@ package net.critical.flight_display.hud;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.critical.flight_display.config.FlightDisplayConfig;
 
-//? if fabric {
+//? if fabric || quilt {
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 //?} elif neoforge {
@@ -16,19 +16,26 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
+// Note: 1.21.5+ removed BufferRenderer and RenderSystem.setShader, uses DrawContext methods
+//? if >=1.21.2 && <1.21.5 {
+/*import net.minecraft.client.gl.ShaderProgramKeys;
+*///?}
 //? if >=1.20 {
 import net.minecraft.client.gui.DrawContext;
 //?} else {
 /*import net.minecraft.client.util.math.MatrixStack;
 *///?}
 
-//? if fabric {
+//? if fabric || quilt {
 @Environment(EnvType.CLIENT)
 //?} else {
 /*@OnlyIn(Dist.CLIENT)
 *///?}
 public class FlightDisplayHud {
     private final MinecraftClient client;
+    //? if >=1.21.5 {
+    /*private DrawContext renderContext;
+    *///?}
 
     private double lastX = 0;
     private double lastY = 0;
@@ -48,6 +55,10 @@ public class FlightDisplayHud {
         if (client.player == null || client.world == null) {
             return;
         }
+
+        //? if >=1.21.5 {
+        /*this.renderContext = context;
+        *///?}
 
         int screenHeight = client.getWindow().getScaledHeight();
         int screenWidth = client.getWindow().getScaledWidth();
@@ -234,6 +245,19 @@ public class FlightDisplayHud {
     }
 
     private void drawLine(int x1, int y1, int x2, int y2, int color) {
+        //? if >=1.21.5 {
+        /*// 1.21.5+ removed BufferRenderer, use DrawContext methods instead
+        if (y1 == y2) {
+            // Horizontal line
+            renderContext.drawHorizontalLine(Math.min(x1, x2), Math.max(x1, x2), y1, color);
+        } else if (x1 == x2) {
+            // Vertical line
+            renderContext.drawVerticalLine(x1, Math.min(y1, y2), Math.max(y1, y2), color);
+        } else {
+            // Diagonal line - approximate with filled rectangle
+            renderContext.fill(Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2) + 1, Math.max(y1, y2) + 1, color);
+        }
+        *///?} else {
         // Extract color components
         int alpha = (color >> 24) & 0xFF;
         int red = (color >> 16) & 0xFF;
@@ -246,7 +270,14 @@ public class FlightDisplayHud {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        //? if >=1.21 {
+        //? if >=1.21.2 {
+        /*RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+
+        BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+        buffer.vertex(x1, y1, 0).color(red, green, blue, alpha);
+        buffer.vertex(x2, y2, 0).color(red, green, blue, alpha);
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+        *///?} elif >=1.21 {
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
@@ -261,7 +292,7 @@ public class FlightDisplayHud {
         buffer.vertex(x1, y1, 0).color(red, green, blue, alpha).next();
         buffer.vertex(x2, y2, 0).color(red, green, blue, alpha).next();
         Tessellator.getInstance().draw();
-        *///?} else {
+        *///?} elif >=1.17 {
         /*RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
         BufferBuilder buffer = Tessellator.getInstance().getBuffer();
@@ -269,8 +300,21 @@ public class FlightDisplayHud {
         buffer.vertex(x1, y1, 0).color(red, green, blue, alpha).next();
         buffer.vertex(x2, y2, 0).color(red, green, blue, alpha).next();
         Tessellator.getInstance().draw();
+        *///?} else {
+        /*// 1.14-1.16: Use old rendering API without shader suppliers
+        RenderSystem.disableTexture();
+        RenderSystem.lineWidth(1.0f);
+
+        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+        buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+        buffer.vertex(x1, y1, 0).color(red, green, blue, alpha).next();
+        buffer.vertex(x2, y2, 0).color(red, green, blue, alpha).next();
+        Tessellator.getInstance().draw();
+
+        RenderSystem.enableTexture();
         *///?}
 
         RenderSystem.disableBlend();
+        //?}
     }
 }

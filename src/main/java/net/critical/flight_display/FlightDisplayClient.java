@@ -1,6 +1,6 @@
 package net.critical.flight_display;
 
-//? if fabric {
+//? if fabric || quilt {
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -27,7 +27,7 @@ import net.critical.flight_display.config.FlightDisplayConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//? if fabric {
+//? if fabric || quilt {
 @Environment(EnvType.CLIENT)
 public class FlightDisplayClient implements ClientModInitializer {
 //?} elif neoforge {
@@ -45,7 +45,7 @@ public class FlightDisplayClient {
     public static final String MOD_ID = "flight_display";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    //? if fabric {
+    //? if fabric || quilt {
     @Override
     public void onInitializeClient() {
         init();
@@ -74,7 +74,7 @@ public class FlightDisplayClient {
 
     public static void init() {
         // Initialize configuration
-        //? if fabric {
+        //? if fabric || quilt {
         FlightDisplayConfig.setConfigPath(FabricLoader.getInstance().getConfigDir());
         //?} else {
         /*FlightDisplayConfig.setConfigPath(FMLPaths.CONFIGDIR.get());

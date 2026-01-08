@@ -27,30 +27,47 @@ stonecutter {
 
         // Target versions and loaders
         // ===== 1.21.x (Fabric + NeoForge) =====
-        // NOTE: 1.21.2+ have significant API changes (isFallFlying, RenderSystem,
-        // GameRenderer shaders) that require additional Stonecutter conditionals.
-        // Only 1.21 and 1.21.1 work with current codebase.
+        // 1.21.5+ use DrawContext for line rendering (BufferRenderer removed)
+        // 1.21.2+ use isGliding() instead of isFallFlying(), ShaderProgramKeys
+        mc("1.21.11", "fabric", "neoforge")
+        mc("1.21.10", "fabric", "neoforge")
+        mc("1.21.9", "fabric", "neoforge")
+        mc("1.21.8", "fabric", "neoforge")
+        mc("1.21.7", "fabric", "neoforge")
+        mc("1.21.6", "fabric", "neoforge")
+        mc("1.21.5", "fabric", "neoforge")
+        mc("1.21.4", "fabric", "neoforge")
+        mc("1.21.3", "fabric", "neoforge")
+        mc("1.21.2", "fabric", "neoforge")
         mc("1.21.1", "fabric", "neoforge")
         mc("1.21", "fabric", "neoforge")
 
-        // ===== 1.20.x =====
-        // 1.20.6: Fabric + NeoForge (stable NeoForge era)
+        // ===== 1.20.x (Fabric + NeoForge + Forge) =====
         mc("1.20.6", "fabric", "neoforge")
-        // 1.20.5: Fabric only (NeoForge has Java version resolution issues)
         mc("1.20.5", "fabric")
-        // 1.20.2-1.20.4: Fabric only (Forge toolchain not supported by Loom)
         mc("1.20.4", "fabric")
         mc("1.20.3", "fabric")
         mc("1.20.2", "fabric")
-        // 1.20-1.20.1: Fabric + Forge (pre-NeoForge split, well-supported)
         mc("1.20.1", "fabric", "forge")
         mc("1.20", "fabric", "forge")
 
-        // ===== Legacy versions =====
-        // 1.19.4 - Fabric + Forge
+        // ===== 1.19.x (Fabric + Forge) =====
         mc("1.19.4", "fabric", "forge")
-        // 1.18.2 - Fabric + Forge
+        mc("1.19.3", "fabric", "forge")
+        mc("1.19.2", "fabric", "forge")
+        mc("1.19.1", "fabric", "forge")
+        mc("1.19", "fabric", "forge")
+
+        // ===== 1.18.x (Fabric + Forge) =====
         mc("1.18.2", "fabric", "forge")
+        mc("1.18.1", "fabric", "forge")
+        mc("1.18", "fabric", "forge")
+
+        // ===== 1.17.x (Fabric + Forge) =====
+        mc("1.17.1", "fabric", "forge")
+
+        // Note: 1.14.x-1.16.x omitted - 4-5+ years old with significantly different APIs
+        // and Fabric API module structure that would require breaking changes to support
     }
     create(rootProject)
 }

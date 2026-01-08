@@ -1,4 +1,4 @@
-//? if fabric {
+//? if fabric || quilt {
 package net.critical.flight_display.mixin;
 
 import net.critical.flight_display.hud.FlightDisplayHud;
@@ -38,7 +38,11 @@ public abstract class InGameHudMixin {
     //? if >=1.21 {
     @Inject(method = "render", at = @At("TAIL"))
     private void flight_display$onRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        //? if >=1.21.2 {
+        /*if (client.player != null && client.player.isGliding()) {
+        *///?} else {
         if (client.player != null && client.player.isFallFlying()) {
+        //?}
             flightDisplayHud.render(context);
         }
     }

@@ -36,7 +36,7 @@ public class ForgeHudRenderer {
         flightDisplayHud.render(event.getGuiGraphics());
     }
 }
-*///?} elif forge && >=1.19.3 {
+*///?} elif forge && >=1.19 {
 /*package net.critical.flight_display;
 
 import net.critical.flight_display.hud.FlightDisplayHud;
