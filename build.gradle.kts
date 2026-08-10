@@ -36,6 +36,20 @@ tasks.test {
     useJUnitPlatform()
 }
 
+// Forge subprojects auto-generate assets/pack.mcmeta into the main sourceSet's
+// resources output (Stonecraft's generatePackMCMetaJson task) without declaring it
+// as an input of compileTestJava/test, even though both consume sourceSets.main.output
+// (which includes that resources dir) on their classpath. Gradle's task-validation
+// then fails the build with an "implicit dependency" error. Wire the dependency
+// explicitly once the task graph is fully known; this task doesn't exist on
+// Fabric/NeoForge subprojects, so guard with findByName rather than named/getByName.
+afterEvaluate {
+    tasks.findByName("generatePackMCMetaJson")?.let { packMcMeta ->
+        tasks.findByName("compileTestJava")?.dependsOn(packMcMeta)
+        tasks.findByName("test")?.dependsOn(packMcMeta)
+    }
+}
+
 // Publishing configuration (not invoked by this task - chiseledPublishMods is
 // never run here; kept for parity with critical-orientation / future use)
 publishMods {
