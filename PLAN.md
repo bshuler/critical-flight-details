@@ -159,52 +159,52 @@ below once attempted.
 - [x] Determine newest stable Minecraft version live from Fabric meta API
 - [x] Write `CLAUDE.md`
 - [x] Write `PLAN.md` (this file)
-- [ ] Commit Phase 1
+- [x] Commit Phase 1
 
 ## Phase 2: Stonecutter/Stonecraft scaffold
 
 Versions pinned to the **current** confirmed-working toolchain (verified live
 against `meza/Stonecraft`'s own source + e2e fixtures, not the mid-edit
-`critical-orientation` template): `dev.kikugie.stonecutter` `0.9.7`,
-`gg.meza.stonecraft` `1.10.+`, Gradle `9.7.0`.
+`critical-orientation` template): `dev.kikugie.stonecutter` `0.9.+`,
+`gg.meza.stonecraft` `1.12.+`, Gradle `9.7.0`.
 
-- [ ] `settings.gradle.kts` - Stonecutter plugin + version/loader matrix
+- [x] `settings.gradle.kts` - Stonecutter plugin + version/loader matrix
       (`shared { fun mc(...) { version(...) }; create(rootProject) }` DSL)
-- [ ] `stonecutter.gradle.kts` - active version pointer
-- [ ] `build.gradle.kts` - Stonecraft central script
-- [ ] `gradle.properties` - mod metadata (`mod.id`, `mod.name`, `mod.version`,
+- [x] `stonecutter.gradle.kts` - active version pointer
+- [x] `build.gradle.kts` - Stonecraft central script
+- [x] `gradle.properties` - mod metadata (`mod.id`, `mod.name`, `mod.version`,
       `mod.group`, `mod.description`)
-- [ ] `versions/dependencies/<mc>.properties` per version cell
+- [x] `versions/dependencies/<mc>.properties` per version cell
       (`minecraft_version`, `loader_version`, `fabric_version`, plus
       `forge_version`/`neoforge_version`/`yarn_mappings` as applicable -
       schema confirmed against `Dependencies.kt` + real fixtures)
-- [ ] Gradle wrapper bumped to `9.7.0` (current Stonecutter 0.9.x era)
-- [ ] Remove old `build.gradle` / `settings.gradle` (Groovy DSL, Loom 0.4)
-- [ ] Commit Phase 2
+- [x] Gradle wrapper bumped to `9.7.0` (current Stonecutter 0.9.x era)
+- [x] Remove old `build.gradle` / `settings.gradle` (Groovy DSL, Loom 0.4)
+- [x] Commit Phase 2
 
 ## Phase 3: Source port, latest-first
 
 Working directly in the shared `src/` tree, adding Stonecutter conditionals
 as each older target is walked back to, per the task brief.
 
-- [ ] `FlightHudMath` - extract pure layout/pitch-offset/speed math out of
+- [x] `FlightHudMath` - extract pure layout/pitch-offset/speed math out of
       the old `FlightDisplayHud.draw()`, loader-agnostic, unit-tested
-- [ ] `FlightHudRenderer` - the actual draw calls, version/loader-branched
-- [ ] `FlightDisplayClient` - loader entrypoint registering the HUD hook
-- [ ] Remove `GameInfoMixin` / `flight_display.mixins.json` (superseded by
+- [x] `FlightHudRenderer` - the actual draw calls, version/loader-branched
+- [x] `FlightDisplayClient` - loader entrypoint registering the HUD hook
+- [x] Remove `GameInfoMixin` / `flight_display.mixins.json` (superseded by
       official HUD render events - see CLAUDE.md Architecture section)
-- [ ] `fabric.mod.json`, `META-INF/mods.toml`, `META-INF/neoforge.mods.toml`
-- [ ] 1.21.4-fabric builds green
-- [ ] 1.21.4-neoforge builds green
-- [ ] 1.20.1-fabric builds green
-- [ ] 1.20.1-forge builds green
-- [ ] 1.19.4-fabric builds green
-- [ ] 1.19.4-forge builds green
-- [ ] 1.18.2-fabric builds green
-- [ ] 1.18.2-forge builds green
-- [ ] `./gradlew chiseledBuild` green for the whole matrix
-- [ ] Commit Phase 3 (may be split into multiple incremental commits per
-      version as the walk-back proceeds)
+- [x] `fabric.mod.json`, `META-INF/mods.toml`, `META-INF/neoforge.mods.toml`
+- [x] 1.21.4-fabric builds green
+- [x] 1.21.4-neoforge builds green
+- [x] 1.20.1-fabric builds green
+- [x] 1.20.1-forge builds green
+- [x] 1.19.4-fabric builds green
+- [x] 1.19.4-forge builds green
+- [x] 1.18.2-fabric builds green
+- [x] 1.18.2-forge builds green
+- [x] `./gradlew chiseledBuild` green for the whole matrix
+- [x] Commit Phase 3 (split into multiple incremental commits per version as
+      the walk-back proceeded: `6d9ed84`, `4b17935`, `fa42c2d`)
 
 ## Phase 3b: Forgix one-jar merge (stretch, after Phase 3 is fully green)
 
@@ -222,12 +222,19 @@ as each older target is walked back to, per the task brief.
 
 ## Phase 4: Repo hygiene
 
-- [ ] Rename default branch `master` → `main`
-- [ ] Update/retire `.github/workflows/gradlepublish.yml` (1.16-era, no
-      longer matches the build) - replace with a `chiseledBuild` CI workflow
-      mirroring `critical-orientation`'s `build.yml`, or remove if out of
-      scope
-- [ ] Update `README.md` version/build instructions to match the new matrix
+- [x] Default branch is `main` (confirmed via `gh repo view --json
+      defaultBranchRef`; already correct, no rename needed)
+- [x] Replaced `.github/workflows/gradlepublish.yml` (1.16-era, JDK 8,
+      `gradle publish` - none of which matches the current build) with
+      `build.yml`: a `chiseledBuild` + `test` CI workflow mirroring
+      `critical-orientation`'s, minus any release/publish steps (out of
+      scope per the task brief - no Modrinth/CurseForge publishing)
+- [x] Updated `README.md` version/build instructions to match the new
+      matrix (`chiseledBuild`, per-version/loader jar paths, supported
+      version table)
+- [x] Removed unused `src/main/resources/assets/flight_display/icon.ico`
+      (dead asset - only `icon.png` is referenced from any of the three
+      loader manifests; `.ico` was never wired up anywhere)
 - [ ] Final commit + push
 
 ---

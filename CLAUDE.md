@@ -71,7 +71,7 @@ post-obfuscation versioning line (`26.1`+).
 ```
 critical-flight-details/
 ├── .github/workflows/
-│   └── gradlepublish.yml         # legacy 1.16-era publish workflow (superseded, see PLAN.md)
+│   └── build.yml                 # CI: chiseledBuild + test across the full matrix on every push/PR
 ├── build.gradle.kts              # Stonecraft build configuration (central script)
 ├── settings.gradle.kts           # Stonecutter version/loader matrix
 ├── stonecutter.gradle.kts        # Active version pointer
