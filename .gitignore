@@ -1,25 +1,41 @@
-# gradle
+# minecraft
+run/
 
+# gradle
+secrets.gradle
+.kotlin/
 .gradle/
 build/
+**/build/
 out/
 classes/
+versions/*-*/**
+!gradle-wrapper.jar
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Cache of project
+.gradletasknamecache
 
 # idea
-
 .idea/
 *.iml
 *.ipr
 *.iws
 
 # vscode
-
 .settings/
 .vscode/
 bin/
 .classpath
 .project
 
-# fabric
+# macos
+*.DS_Store
 
-run/
+# java
+hs_err_*.log
+replay_*.log
+*.hprof
+*.jfr

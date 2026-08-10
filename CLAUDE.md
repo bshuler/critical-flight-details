@@ -18,12 +18,32 @@ client HUD. It renders only while flying with an Elytra.
 
 ## Supported Platforms (target matrix)
 
+Loader coverage is **mandatory**, not best-effort: every Minecraft version
+target must build for every loader viable on that version - Fabric +
+NeoForge for 1.20.5+, Fabric + Forge for ≤1.20.4. A cell is only skipped when
+the loader itself cannot exist for that version (see PLAN.md's "exact
+blockers" list), never by choice.
+
 | Minecraft Version | Fabric | NeoForge | Forge |
 |--------------------|--------|----------|-------|
-| 1.21.4             | ✅      | ✅        | ❌ (NeoForge split from Forge at 1.20.2) |
-| 1.20.1             | ✅      | ❌        | ✅     |
-| 1.19.4             | ✅      | ❌        | ✅     |
-| 1.18.2             | ✅      | ❌        | ✅     |
+| 1.21.4             | ✅      | ✅        | ❌ (Forge's `IGuiOverlay` API is gone by 1.20.5+, and 1.20.5+ is NeoForge's lane) |
+| 1.20.1             | ✅      | ❌        | ✅ (≤1.20.4 is Forge's lane) |
+| 1.19.4             | ✅      | ❌        | ✅ (≤1.20.4 is Forge's lane) |
+| 1.18.2             | ✅      | ❌        | ✅ (≤1.20.4 is Forge's lane) |
+
+**Quilt**: not a separate build target. Quilt runs Fabric jars natively, so
+every Fabric jar above is Quilt-compatible as-is - nothing extra to build.
+
+**One-jar-per-version (Forgix)**: investigated the
+[Forgix](https://github.com/PacifistMC/Forgix) Gradle plugin to merge each
+version's per-loader jars into a single all-loader jar. It's actively
+maintained (release 2.0.0, 2026-08-02) and works by repackaging already-built
+jars so each loader only loads its own package - structurally independent of
+Stonecutter/Stonecraft. It needs manual `inputJar` wiring per version cell
+because Forgix's auto-detection expects subprojects named `fabric`/`forge`/
+`neoforge`, not Stonecutter's `<version>-<loader>` naming. See PLAN.md
+("One-jar-per-version investigation: Forgix" / "Appendix: Forgix outcome")
+for the full writeup and attempt result.
 
 This mirrors the sibling `critical-orientation` mod's matrix exactly. See
 `PLAN.md` for why the *actual* newest stable Minecraft version (`26.2`, per
@@ -37,8 +57,11 @@ post-obfuscation versioning line (`26.1`+).
 - **Language**: Java 21 (toolchain via Gradle; source/target level pinned per
   Minecraft version's own requirement where lower JDKs were originally used -
   Gradle toolchains auto-provision, nothing installed system-wide)
-- **Build System**: Gradle 8.11.1 with Stonecutter + the `gg.meza.stonecraft`
-  plugin (same as `critical-orientation`)
+- **Build System**: Gradle 9.7.0 with Stonecutter `0.9.7` + the
+  `gg.meza.stonecraft` `1.10.+` plugin (current confirmed-working versions,
+  verified live against `meza/Stonecraft`'s own source/e2e fixtures - not the
+  older `0.5`/`1.9.+` pair originally read from `critical-orientation` before
+  it was independently bumped to this same current pair)
 - **Multi-Loader**: Stonecraft (Architectury + Stonecutter combined)
 - **Rendering hooks**: modernized away from the original 1.16 Mixin into
   `InGameHud` - see "Architecture" below.

@@ -73,6 +73,14 @@ see "Appendix: 26.2 probe" below for the outcome.
 
 ## Target Matrix
 
+**Loader coverage mandate (updated requirement, supersedes "if feasible"):**
+every Minecraft version target must build for **every loader viable on that
+version** — Fabric + NeoForge for 1.20.5+, Fabric + Forge for ≤1.20.4. No
+loader cell is skipped by choice; a cell is only ❌ when the loader itself
+does not support that Minecraft version (a hard external blocker, recorded
+below). Quilt is not a separate build target: it runs Fabric jars natively,
+so Quilt compatibility is documented (README.md/CLAUDE.md) rather than built.
+
 | Minecraft Version | Fabric | NeoForge | Forge | Status |
 |--------------------|--------|----------|-------|--------|
 | 1.21.4             | ✅      | ✅        | ❌     | ☐ |
@@ -80,11 +88,67 @@ see "Appendix: 26.2 probe" below for the outcome.
 | 1.19.4             | ✅      | ❌        | ✅     | ☐ |
 | 1.18.2             | ✅      | ❌        | ✅     | ☐ |
 
-Forge stops at 1.20.1 because Forge removed `IGuiOverlay`/
-`RegisterGuiOverlaysEvent` (the HUD overlay API this mod relies on) in
-1.20.5+. NeoForge only appears at 1.21.4 because NeoForge forked from Forge
-at 1.20.2 - mirrors `critical-orientation`'s own matrix and rationale
-exactly.
+Exact blockers for the ❌ cells (not a choice to skip — the loader/API does
+not exist for that version):
+- **Forge @ 1.21.4 = ❌**: Forge removed `IGuiOverlay`/
+  `RegisterGuiOverlaysEvent` (the HUD overlay API this mod relies on) in
+  1.20.5+, and per the mandate above 1.20.5+ is NeoForge's lane, not
+  Forge's — so this is doubly excluded (API removed *and* out of Forge's
+  mandated version band).
+- **NeoForge @ 1.20.1/1.19.4/1.18.2 = ❌**: per the mandate, NeoForge's lane
+  is 1.20.5+ only; these versions are Forge's lane. (NeoForge itself did not
+  exist as a separate project before its fork from Forge in mid-2023, so it
+  has no build for these versions regardless of the mandate.)
+
+Every other cell (Fabric on all 4; NeoForge on 1.21.4; Forge on 1.20.1/
+1.19.4/1.18.2) is mandatory — none may be dropped silently.
+
+### One-jar-per-version investigation: Forgix
+
+Bert asked to investigate merging each Minecraft version's per-loader jars
+into a single "works on all loaders" jar via the
+[Forgix](https://github.com/PacifistMC/Forgix) Gradle plugin.
+
+**Maintenance status (checked live via `gh api`, not training memory,
+2026-08-10):** actively maintained — latest release `2.0.0` published
+2026-08-02, most recent commit `2026-08-10` (same day as this check), repo
+not archived, low open-issue count with a healthy closed-issue history
+(bug reports get fixed, e.g. issue #61 "JarJar de-duplication not working
+for Fabric+NeoForge builds" - closed). The one alternative surfaced
+(`firstdarkdev/modfusioner`, "based on Forgix") is stale (`pushed_at`
+2024-06-02) and not a better choice.
+
+**How it works:** Forgix operates *after* each loader's jar is already
+built - it merges already-built jars by repackaging so each modloader's
+entrypoint only ever touches its own package (JVM never loads classes the
+active loader doesn't call). This makes it structurally independent of
+whatever produced the input jars, so it is not inherently incompatible with
+Stonecutter/Stonecraft.
+
+**The actual friction point:** Forgix's built-in auto-detection expects
+subprojects literally named `fabric`, `forge`, `neoforge`, `quilt`. Stonecutter
+names its generated subprojects `<mc-version>-<loader>` (e.g.
+`1.21.4-neoforge`), so auto-detection will not find them. Forgix does support
+a manual override (`inputJar = project(":path").tasks.<task>.archiveFile`),
+so wiring is possible per Minecraft-version cell, e.g.:
+
+```kotlin
+// root build.gradle.kts, one merge task per MC version that has 2+ loaders
+forgix {
+    fabric { inputJar = project(":1.21.4-fabric").tasks.named("remapJar").flatMap { (it as AbstractArchiveTask).archiveFile } }
+    neoforge { inputJar = project(":1.21.4-neoforge").tasks.named("remapJar").flatMap { (it as AbstractArchiveTask).archiveFile } }
+    archiveVersion = "1.21.4"
+}
+```
+
+**Decision:** attempt this wiring as a stretch step *after* every per-loader
+build cell above is green (the mandatory bar). If it causes build breakage
+(the closed-issue history shows real friction around Mixins/TinyRemapper
+with remapped jars), fall back to shipping per-loader jars from the single
+codebase - which already satisfies "one codebase, every loader" even without
+a literal single merged artifact - and record the exact failure here rather
+than silently dropping it. Outcome recorded in the "Forgix outcome" appendix
+below once attempted.
 
 ---
 
@@ -99,12 +163,22 @@ exactly.
 
 ## Phase 2: Stonecutter/Stonecraft scaffold
 
+Versions pinned to the **current** confirmed-working toolchain (verified live
+against `meza/Stonecraft`'s own source + e2e fixtures, not the mid-edit
+`critical-orientation` template): `dev.kikugie.stonecutter` `0.9.7`,
+`gg.meza.stonecraft` `1.10.+`, Gradle `9.7.0`.
+
 - [ ] `settings.gradle.kts` - Stonecutter plugin + version/loader matrix
+      (`shared { fun mc(...) { version(...) }; create(rootProject) }` DSL)
 - [ ] `stonecutter.gradle.kts` - active version pointer
 - [ ] `build.gradle.kts` - Stonecraft central script
 - [ ] `gradle.properties` - mod metadata (`mod.id`, `mod.name`, `mod.version`,
       `mod.group`, `mod.description`)
-- [ ] Gradle wrapper bumped to match template (8.11.1)
+- [ ] `versions/dependencies/<mc>.properties` per version cell
+      (`minecraft_version`, `loader_version`, `fabric_version`, plus
+      `forge_version`/`neoforge_version`/`yarn_mappings` as applicable -
+      schema confirmed against `Dependencies.kt` + real fixtures)
+- [ ] Gradle wrapper bumped to `9.7.0` (current Stonecutter 0.9.x era)
 - [ ] Remove old `build.gradle` / `settings.gradle` (Groovy DSL, Loom 0.4)
 - [ ] Commit Phase 2
 
@@ -132,6 +206,20 @@ as each older target is walked back to, per the task brief.
 - [ ] Commit Phase 3 (may be split into multiple incremental commits per
       version as the walk-back proceeds)
 
+## Phase 3b: Forgix one-jar merge (stretch, after Phase 3 is fully green)
+
+- [ ] Apply `io.github.pacifistmc.forgix` at the root
+- [ ] Wire manual `inputJar` overrides per MC-version cell (Stonecutter's
+      `<version>-<loader>` subproject names don't match Forgix's
+      auto-detected `fabric`/`forge`/`neoforge` names)
+- [ ] `mergeJars` produces one jar for 1.21.4 (fabric+neoforge)
+- [ ] `mergeJars` produces one jar for 1.20.1 (fabric+forge)
+- [ ] `mergeJars` produces one jar for 1.19.4 (fabric+forge)
+- [ ] `mergeJars` produces one jar for 1.18.2 (fabric+forge)
+- [ ] Record outcome in "Forgix outcome" appendix; fall back to per-loader
+      jars (already satisfies the mandate) for any cell where it breaks the
+      build, with the exact error recorded
+
 ## Phase 4: Repo hygiene
 
 - [ ] Rename default branch `master` → `main`
@@ -158,10 +246,21 @@ final task report for outcome)_.
 
 ---
 
+## Appendix: Forgix outcome (one-jar-per-version merge)
+
+Investigation (maintenance status, mechanism, integration path) is written up
+under "One-jar-per-version investigation: Forgix" above. This section records
+the actual attempt once Phase 3 is green.
+
+Result: _(filled in after Phase 3b is actually attempted)_.
+
+---
+
 ## Appendix: Key Resources
 
 - [Stonecutter Documentation](https://stonecutter.kikugie.dev/)
 - [Stonecraft](https://stonecraft.meza.gg/)
+- [Forgix](https://github.com/PacifistMC/Forgix)
 - [Fabric porting docs](https://docs.fabricmc.net/develop/porting/)
 - [Fabric API HudRenderCallback → HudElementRegistry deprecation](https://docs.fabricmc.net/)
 - [NeoForge RenderGuiEvent](https://docs.neoforged.net/)
