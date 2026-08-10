@@ -241,6 +241,35 @@ Attempted: a bare `fabric-loom` 1.17 project (no Stonecutter/Stonecraft)
 against Minecraft `26.2`, Fabric Loader `0.19.3`, Gradle `9.5.1`, using
 Mojang's own (unobfuscated) class names directly instead of Yarn.
 
+**Known API-break points for 26.2**, relayed from sibling mods' own porting
+work against the same version (not independently re-derived here, but
+consistent with this mod's own HUD-render-hook architecture, so recorded
+verbatim for whoever picks this probe up):
+
+- The GUI render pipeline this mod's `HudRenderCallback`/`RenderGuiEvent`/
+  `RegisterGuiOverlaysEvent` hooks all ultimately draw through is rewritten
+  outright: `GuiGraphics` and `Gui.render(...)` are gone. In their place,
+  rendering happens via `extractRenderState(DeltaTracker, boolean, boolean)`
+  populating a `net.minecraft.client.renderer.state.gui.GuiRenderState`.
+  This mod would need its HUD draw calls (`fill`, `drawString`) re-targeted
+  at whatever the new state-object equivalent is - a real redesign of
+  `FlightHudRenderer`'s drawing layer, not a signature tweak.
+- `KeyMapping`'s constructor now takes a `KeyMapping.Category` instead of a
+  raw `String` for its category argument. Not used by this mod today (no
+  keybinds - see CLAUDE.md "Project Overview"), so this specific break is
+  moot for `critical-flight-details`, but worth knowing if a config
+  keybind is ever added.
+- Fabric API's `KeyBindingHelper`/`ClientCommandManager` moved packages
+  relative to 1.21.4. Same "moot unless a keybind/command is added" caveat
+  as above.
+
+Net assessment: the GUI-pipeline rewrite is the real blocker for this mod
+specifically, since HUD drawing is this mod's entire purpose. Any 26.2 port
+attempt should design the HUD draw call as its own small abstraction (e.g.
+an interface with one `drawLadder(...)`-style method) with the
+`GuiRenderState`-based endpoint in mind from the start, rather than trying
+to retrofit the existing `GuiGraphics`-based calls after the fact.
+
 Result: _(filled in after the probe is actually run - see commit history /
 final task report for outcome)_.
 

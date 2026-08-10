@@ -57,8 +57,8 @@ post-obfuscation versioning line (`26.1`+).
 - **Language**: Java 21 (toolchain via Gradle; source/target level pinned per
   Minecraft version's own requirement where lower JDKs were originally used -
   Gradle toolchains auto-provision, nothing installed system-wide)
-- **Build System**: Gradle 9.7.0 with Stonecutter `0.9.7` + the
-  `gg.meza.stonecraft` `1.10.+` plugin (current confirmed-working versions,
+- **Build System**: Gradle 9.7.0 with Stonecutter `0.9.+` + the
+  `gg.meza.stonecraft` `1.12.+` plugin (current confirmed-working versions,
   verified live against `meza/Stonecraft`'s own source/e2e fixtures - not the
   older `0.5`/`1.9.+` pair originally read from `critical-orientation` before
   it was independently bumped to this same current pair)
@@ -82,11 +82,10 @@ critical-flight-details/
 ├── PLAN.md                       # Modernization roadmap + status checklist
 ├── versions/                     # Generated per-version/loader subprojects (gitignored)
 └── src/
-    ├── client/java/net/critical/flight_display/
-    │   ├── FlightDisplayClient.java   # Loader-specific entry point + HUD-event registration
-    │   └── hud/FlightHudRenderer.java # Loader/version-conditional draw code
     ├── main/java/net/critical/flight_display/
-    │   └── FlightHudMath.java         # Pure, loader-agnostic HUD layout/speed math
+    │   ├── FlightDisplayClient.java   # Loader-specific entry point + HUD-event registration
+    │   ├── FlightHudMath.java         # Pure, loader-agnostic HUD layout/speed math
+    │   └── hud/FlightHudRenderer.java # Loader/version-conditional draw code
     ├── main/resources/
     │   ├── fabric.mod.json
     │   ├── META-INF/
@@ -98,6 +97,20 @@ critical-flight-details/
     └── test/java/net/critical/flight_display/
         └── FlightHudMathTest.java     # Unit tests for the pure math
 ```
+
+This mod is client-only (no server logic at all), so **everything lives under
+`src/main`, including loader/render code** - there is no `src/client` split.
+Stonecraft/Loom only wires a separate `src/client/java` source set into the
+compile task when the build script opts in via
+`loom.splitEnvironmentSourceSets()`; this project's `build.gradle.kts` never
+calls that, so a `src/client/java` directory would be silently skipped
+(`NO-SOURCE`) rather than compiled. `src/main`'s compile classpath does carry
+the full Minecraft dependency here for exactly that reason. (A sibling mod
+using the split-source-set convention may see the opposite: `src/main` with
+no Minecraft dependency, and client code required to live in
+`src/client/java`. Both are valid Stonecraft configurations - check whether
+the project's build script calls `splitEnvironmentSourceSets()` before
+assuming either layout.)
 
 ## Architecture
 
@@ -130,20 +143,37 @@ supported per-loader HUD render event instead of reaching into `InGameHud`:
   without an extra HUD-layer-registration branch.
 - **NeoForge** (1.21.4 only): `net.neoforged.neoforge.client.event.RenderGuiEvent.Post`
   on `NeoForge.EVENT_BUS`.
-- **Forge** (1.18.2/1.19.4/1.20.1): `RegisterGuiOverlaysEvent` +
-  `IGuiOverlay` (this API was removed in Forge 1.20.5+, which is exactly why
-  the Forge targets stop at 1.20.1 - see PLAN.md).
+- **Forge** - the registration API differs *within* the Forge lane itself,
+  not just at the Forge/NeoForge boundary:
+  - **1.18.2**: `OverlayRegistry.registerOverlayTop(...)` called from
+    `FMLClientSetupEvent`, drawing against `ForgeIngameGui` + `PoseStack`.
+  - **1.19.4 and 1.20.1**: `RegisterGuiOverlaysEvent` +
+    `event.registerAboveAll(...)` (the `IGuiOverlay`-shaped callback),
+    drawing against `ForgeGui`; only the draw-call signature changes between
+    them (`PoseStack` for 1.19.4, `GuiGraphics` for 1.20.1 - see the
+    `MatrixStack`/`PoseStack` → `GuiGraphics` row below).
+  - Both `OverlayRegistry` and `RegisterGuiOverlaysEvent`/`IGuiOverlay` are
+    gone by Forge 1.20.5+, which is exactly why the Forge targets stop at
+    1.20.1 - see PLAN.md.
+
+All three loaders use Mojang's official mappings end-to-end (Stonecraft's
+default namespace here, matching `critical-orientation`) - so Fabric,
+Forge, and NeoForge all resolve to the same Mojmap class names
+(`GuiGraphics`, `LocalPlayer`, `PoseStack`, etc.); there is no separate
+Yarn-mapped `DrawContext`/`InGameHud` naming in this codebase.
 
 Drawing primitives:
-- `<1.20` (Fabric only: 1.18.2, 1.19.4): `MatrixStack` + `TextRenderer.draw(matrices, ...)`
-  + `DrawableHelper.fill(matrices, x1, y1, x2, y2, color)` for the ladder
-  lines (both the horizon rails and tick marks are pure horizontal/vertical
-  segments, so a 1px-thick filled rect stands in for the old `GL11.GL_LINES`
-  draw with identical visual result).
+- `<1.20` (Fabric 1.18.2/1.19.4, Forge 1.18.2/1.19.4): `PoseStack` +
+  `client.font.draw(poseStack, text, x, y, color)` + `GuiComponent.fill(poseStack,
+  x1, y1, x2, y2, color)` for the ladder lines (both the horizon rails and
+  tick marks are pure horizontal/vertical segments, so a 1px-thick filled
+  rect stands in for the old `GL11.GL_LINES` draw with identical visual
+  result).
 - `>=1.20` (Fabric 1.20.1/1.21.4, Forge 1.20.1, NeoForge 1.21.4):
-  `DrawContext`(Fabric)/`GuiGraphics`(Forge/NeoForge) - both expose matching
-  `drawText(...)` and `fill(x1,y1,x2,y2,color)` methods, so the two are
-  interchangeable modulo the type/import name.
+  `GuiGraphics` on every loader - `guiGraphics.drawString(...)` and
+  `guiGraphics.fill(x1, y1, x2, y2, color)`. Fabric 1.21.4's callback also
+  receives a `DeltaTracker` instead of a raw `float tickDelta`, but the mod
+  doesn't use partial-tick interpolation so this is a signature-only change.
 
 All layout and speed math (hash spacing, pitch offset, distance-sampling
 speed calc) lives in `FlightHudMath`, which takes only primitives
@@ -160,7 +190,9 @@ modernization pass. Flagged here so nobody "fixes" it by accident later.
 
 ## Stonecutter Preprocessor
 
-Same mechanism as `critical-orientation`:
+Same mechanism as `critical-orientation`. Real excerpts from
+`FlightDisplayClient.java` / `FlightHudRenderer.java` (loader conditions can
+be combined with a version bound, e.g. `forge && <1.19`):
 
 ```java
 //? if fabric {
@@ -168,20 +200,28 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 //?} elif neoforge {
 /*import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.common.NeoForge;
+*///?} elif forge && <1.19 {
+/*import net.minecraftforge.client.gui.OverlayRegistry;
 *///?} elif forge {
 /*import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 *///?}
 ```
 
 ```java
-//? if >=1.20 {
-context.drawText(textRenderer, text, x, y, color, false);
+//? if fabric && <1.20 {
+/*client.font.draw(poseStack, text, x, y, color);*/
+//?} elif forge && <1.20 {
+/*client.font.draw(poseStack, text, x, y, color);*/
 //?} else {
-/*textRenderer.draw(matrices, text, x, y, color);*/
+guiGraphics.drawString(client.font, text, x, y, color, false);
 //?}
 ```
 
-- Active version set in `stonecutter.gradle.kts`.
+- Active version set in `stonecutter.gradle.kts` - never hand-edit the
+  `/* [SC] DO NOT EDIT */` marker; switch it with
+  `./gradlew "Set active project to <mc>-<loader>"` (e.g.
+  `./gradlew "Set active project to 1.20.1-forge"`) if the active node ever
+  needs to change.
 - Comments are (un)commented per-subproject during `chiseledBuild`.
 
 ## Build Commands
@@ -226,12 +266,15 @@ Managed in `gradle.properties`:
 
 | Change | Versions affected | Notes |
 |---|---|---|
-| `MatrixStack` → `DrawContext`/`GuiGraphics` | 1.19.4 → 1.20.1 | Also changes `TextRenderer.draw` signature entirely |
+| `Entity.level()` doesn't exist yet; only `getLevel()` | <1.20 (1.18.2, 1.19.4) | Confirmed directly against the layered mappings' `mappings.tiny` - `level()` is a real 1.20+ Mojmap addition, not a Yarn-naming artifact |
+| `PoseStack`/`client.font.draw(...)` → `GuiGraphics`/`guiGraphics.drawString(...)` | 1.19.4 → 1.20.1 (both loaders) | Signature-only change; same visual result |
 | `InGameHud` Mixin → `HudRenderCallback`/overlay events | all | Mixin removed outright in the port |
 | Immediate-mode `GL11`/`Tessellator` line drawing removed | pre-1.20 code only | Replaced with `fill()` 1px rects |
-| Forge `IGuiOverlay`/`RegisterGuiOverlaysEvent` removed | Forge 1.20.5+ | Why Forge targets stop at 1.20.1 |
+| Forge `OverlayRegistry` → `RegisterGuiOverlaysEvent`/`IGuiOverlay` | 1.18.2 → 1.19.4 | Not a single uniform Forge API across the whole Forge lane - 1.18.2 alone still uses the older `OverlayRegistry` |
+| Forge `RegisterGuiOverlaysEvent`/`IGuiOverlay` removed entirely | Forge 1.20.5+ | Why Forge targets stop at 1.20.1 |
 | NeoForge fork from Forge | 1.20.2+ | Why NeoForge only appears at 1.21.4, mirroring `critical-orientation` |
 | Yarn mappings frozen at 1.21.11 | 26.1+ | Minecraft shipped fully unobfuscated starting 26.1; Fabric stopped maintaining Yarn. See PLAN.md "Newest stable Minecraft version" section. |
+| `GuiGraphics.extractRenderState(...)`/`GuiRenderState` replaces `Gui.render(...)`; `KeyMapping.Category` replaces `String` category | 26.2+ | Not yet attempted here - see PLAN.md "Appendix: 26.2 probe" |
 
 ## Distribution
 
