@@ -70,8 +70,9 @@ public final class FlightHudRenderer {
         int displayPitch = FlightHudMath.invertedDisplayPitch(pitch);
         double pitchOffset = FlightHudMath.pitchOffset(layout.distanceBetweenHashes(), rawTruncatedPitch);
 
+        // Entity.level() (a method) doesn't exist before 1.20; use the older getLevel() accessor.
         speedSample = FlightHudMath.sampleSpeed(
-                player.level().getGameTime(), player.getX(), player.getY(), player.getZ(), speedSample);
+                player.getLevel().getGameTime(), player.getX(), player.getY(), player.getZ(), speedSample);
 
         GuiComponent.fill(poseStack, (int) layout.left(), (int) layout.top(), (int) layout.left() + 1, (int) layout.bottom(), RED);
         GuiComponent.fill(poseStack, (int) layout.right(), (int) layout.top(), (int) layout.right() + 1, (int) layout.bottom(), RED);
@@ -189,8 +190,9 @@ public final class FlightHudRenderer {
         int displayPitch = FlightHudMath.invertedDisplayPitch(pitch);
         double pitchOffset = FlightHudMath.pitchOffset(layout.distanceBetweenHashes(), rawTruncatedPitch);
 
+        // Entity.level() (a method) doesn't exist before 1.20; use the older getLevel() accessor.
         speedSample = FlightHudMath.sampleSpeed(
-                player.level().getGameTime(), player.getX(), player.getY(), player.getZ(), speedSample);
+                player.getLevel().getGameTime(), player.getX(), player.getY(), player.getZ(), speedSample);
 
         GuiComponent.fill(poseStack, (int) layout.left(), (int) layout.top(), (int) layout.left() + 1, (int) layout.bottom(), RED);
         GuiComponent.fill(poseStack, (int) layout.right(), (int) layout.top(), (int) layout.right() + 1, (int) layout.bottom(), RED);
@@ -217,8 +219,9 @@ public final class FlightHudRenderer {
         int displayPitch = FlightHudMath.invertedDisplayPitch(pitch);
         double pitchOffset = FlightHudMath.pitchOffset(layout.distanceBetweenHashes(), rawTruncatedPitch);
 
+        // Entity.level() (a method) doesn't exist before 1.20; use the older getLevel() accessor.
         speedSample = FlightHudMath.sampleSpeed(
-                player.level().getGameTime(), player.getX(), player.getY(), player.getZ(), speedSample);
+                player.getLevel().getGameTime(), player.getX(), player.getY(), player.getZ(), speedSample);
 
         GuiComponent.fill(poseStack, (int) layout.left(), (int) layout.top(), (int) layout.left() + 1, (int) layout.bottom(), RED);
         GuiComponent.fill(poseStack, (int) layout.right(), (int) layout.top(), (int) layout.right() + 1, (int) layout.bottom(), RED);
