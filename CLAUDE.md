@@ -233,13 +233,43 @@ guiGraphics.drawString(client.font, text, x, y, color, false);
 # Build one version/loader
 ./gradlew :1.21.4-fabric:build
 
-# Run tests (loader-agnostic math only)
-./gradlew test
+# Run tests (loader-agnostic math only) - ACTIVE PROJECT ONLY, never across the matrix
+./gradlew ":1.21.4-fabric:test"
+
+# Run tests + JaCoCo coverage report (active project only)
+./gradlew ":1.21.4-fabric:test" ":1.21.4-fabric:jacocoTestReport"
+# HTML report: versions/1.21.4-fabric/build/reports/jacoco/test/html/index.html
+
+# Enforce the 100% line-coverage bar (fails the build below the threshold)
+./gradlew ":1.21.4-fabric:jacocoTestCoverageVerification"
 
 # Run the Minecraft client for the active version (for manual smoke-testing only;
 # NOT required to consider a version "done")
 ./gradlew runClient
 ```
+
+Bare `./gradlew test` (no project prefix) runs tests across **every**
+subproject in the matrix - fine as a one-off sanity check since all cells
+share the same trivial `FlightHudMathTest`, but the project convention is to
+scope test/coverage commands to the active project (`:1.21.4-fabric:...`)
+per Stonecutter's own guidance, so switching the active project via
+`./gradlew "Set active project to <mc>-<loader>"` and re-running the same
+active-project command is the supported workflow rather than the bare
+matrix-wide task.
+
+### Coverage scope (JaCoCo)
+
+100% line coverage is enforced (`jacocoTestCoverageVerification`, wired into
+`check`) for the classes genuinely testable headless:
+
+| Class | In scope? | Why |
+|---|---|---|
+| `FlightHudMath` (+ records) | Yes - 100% | Pure math, zero Minecraft-class dependency |
+| `FlightDisplayClient` | Excluded | Loader entry point - registers against real event-bus/loader singletons at construction |
+| `hud.FlightHudRenderer` | Excluded | Every path calls `Minecraft.getInstance()`/draws via `GuiGraphics`/`PoseStack` - no headless double |
+
+See `PLAN.md` ("Phase 5: Test coverage") for the full writeup and exact
+coverage numbers.
 
 ## Version Configuration
 

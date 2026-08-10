@@ -239,6 +239,74 @@ as each older target is walked back to, per the task brief.
 
 ---
 
+## Phase 5: Test coverage (JaCoCo) + Folia
+
+### Test coverage
+
+JaCoCo wiring mirrors the sibling `critical-orientation` template exactly
+(that repo's `build.gradle.kts` was read for reference, not modified):
+`jacoco` plugin applied at the root Stonecraft script (shared across every
+version/loader subproject), `tasks.test { finalizedBy(jacocoTestReport) }`,
+an explicit `jacocoExcludes` file-pattern list applied to both
+`jacocoTestReport` and `jacocoTestCoverageVerification`'s `classDirectories`,
+a `LINE` / `COVEREDRATIO` / `minimum = 1.00` violation rule, and
+`tasks.check { dependsOn(jacocoTestCoverageVerification) }` so the bar is
+enforced by `check`/`build`, not just advisory.
+
+Per the task brief, coverage was driven and verified on the **active**
+Stonecutter project only (`1.21.4-fabric`) — never across the full matrix.
+
+**Coverage result (active project, `1.21.4-fabric`): 100% line coverage**
+(32/32 lines, 235/235 instructions covered per
+`versions/1.21.4-fabric/build/reports/jacoco/test/jacocoTestReport.xml`) on
+the in-scope class set. `jacocoTestCoverageVerification` passes at the
+enforced 100% `LINE`/`COVEREDRATIO` bar.
+
+**In scope (3 classes analyzed — confirmed nonzero, not a malformed-include
+false pass):**
+- `net.critical.flight_display.FlightHudMath` (+ its two records,
+  `FlightHudMath$Layout` and `FlightHudMath$SpeedSample`) — pure,
+  loader-agnostic layout/pitch-ladder/speed math with zero Minecraft-class
+  dependency. Already had a thorough `FlightHudMathTest` from the Phase 3
+  port; no gaps found, no changes needed to reach 100%.
+
+**Excluded (documented, not silent):**
+- `net.critical.flight_display.FlightDisplayClient` — untestable headless:
+  its `elif` bodies are `@Mod`-annotated loader entry points
+  (`ClientModInitializer`, NeoForge's `IEventBus`/`NeoForge.EVENT_BUS`,
+  Forge's `FMLJavaModLoadingContext`) that register against real
+  loader/event-bus singletons at construction/class-load time — there is no
+  headless double for any of them.
+- `net.critical.flight_display.hud.FlightHudRenderer` — untestable headless:
+  every code path calls `Minecraft.getInstance()`, reads `LocalPlayer`/
+  `GuiGraphics`/`PoseStack` state, and issues real draw calls; it exists
+  purely to marshal Minecraft-client state into `FlightHudMath`'s already-
+  tested pure functions and then draw the result. There is nothing left to
+  test in this class that doesn't require a running game client.
+
+No bugs were found in `FlightHudMath` while wiring coverage — the existing
+Phase 3 test suite (`FlightHudMathTest`) already exercised every branch,
+including the documented negative-modulo and clipping edge cases.
+
+**Running tests + coverage locally** (see also CLAUDE.md):
+
+```bash
+# Active project only - per-repo policy, never run test across the whole matrix
+./gradlew ":1.21.4-fabric:test" ":1.21.4-fabric:jacocoTestReport"
+./gradlew ":1.21.4-fabric:jacocoTestCoverageVerification"   # enforces the 100% LINE bar
+```
+
+### Folia
+
+Folia n/a — client mod. Folia is a server-side Paper/Bukkit fork
+(region-threaded scheduler for servers); this mod has no server component
+at all (client-only HUD overlay, `side = CLIENT` in every loader manifest,
+no `src/server`/common logic). The Folia compatibility work in this brief
+(scheduler audits, `folia-supported: true` in `plugin.yml`, etc.) does not
+apply to a client-only mod.
+
+---
+
 ## Appendix: 26.2 probe (stretch goal, outside the guaranteed matrix)
 
 Documented separately so a future pass can pick this up once the toolchain
