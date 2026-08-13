@@ -369,3 +369,16 @@ Result: _(filled in after Phase 3b is actually attempted)_.
 - [Fabric API HudRenderCallback → HudElementRegistry deprecation](https://docs.fabricmc.net/)
 - [NeoForge RenderGuiEvent](https://docs.neoforged.net/)
 - [Forge IGuiOverlay / RegisterGuiOverlaysEvent (removed 1.20.5+)](https://docs.minecraftforge.net/)
+
+## Coverage in context (measured 2026-08-13)
+
+Read from the JaCoCo XML report, not from whether the gate passes:
+
+- **Analysed surface:** 3 of 5 compiled classes (60%).
+- **Line coverage of that surface:** 100.0% (32 lines analysed).
+- Classes outside that surface are excluded by the documented exclusion list. They
+  are not covered by any test and are not runtime-verified.
+  Measured from `critical-flight-details/versions/1.18.2-fabric/build/reports/jacoco/test/jacocoTestReport.xml`.
+
+A passing `check` means "no regression inside the analysed surface" — it does not
+mean the whole codebase is tested to that percentage.
