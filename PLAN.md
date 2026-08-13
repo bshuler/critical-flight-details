@@ -382,3 +382,35 @@ Read from the JaCoCo XML report, not from whether the gate passes:
 
 A passing `check` means "no regression inside the analysed surface" — it does not
 mean the whole codebase is tested to that percentage.
+
+## Tier 1: loaded-game testing (added 2026-08-13)
+
+The coverage numbers above measure *headless* tests against pure logic. Until
+now nothing in this repo verified that the mod's assumptions survive contact
+with a real game.
+
+`net.fabricmc:fabric-loader-junit` closes that gap on the Fabric cells - it
+stands a real Fabric loader up inside the JUnit worker, so a test can bootstrap
+Minecraft and assert against loaded game data. `LoadedGameTest` uses it for four
+things a headless test structurally cannot do: prove the item registry really
+loaded, prove a real loader discovers this mod from its processed
+`fabric.mod.json`, prove every declared `depends` range is satisfiable in that
+specific cell, and pin the pitch-ladder math to vanilla's own clamped pitch
+range via `Mth.clamp`.
+
+The dependency-range check is the one with teeth. In a Stonecutter matrix a cell
+can compile and package flawlessly while declaring a `minecraft` range that
+excludes the very version it was built for; the jar then fails at load time, in
+front of a user, with nothing in CI having gone red. That failure mode is now
+caught per cell at test time.
+
+**Verified, not assumed:** `./gradlew test` runs it in all 4 Fabric cells
+(1.18.2, 1.19.4, 1.20.1, 1.21.4) with 5 tests each, 0 failures, 0 errors, parsed
+from `versions/*/build/test-results/test/*LoadedGameTest.xml`.
+
+**What it does not cover.** This is a loaded *game*, not a loaded *client*: no
+window, no render pass, no player entity. `FlightDisplayClient` and
+`FlightHudRenderer` remain untested and excluded, as documented above.
+
+**NeoForge cells have no equivalent** - not an oversight, NeoForge's loaded-test
+path is ModDevGradle-only. See the junit-fml comment in `build.gradle.kts`.

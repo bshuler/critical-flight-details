@@ -311,3 +311,35 @@ Managed in `gradle.properties`:
 - Previously on CurseForge: `critical-flight-details`.
 - GitHub releases.
 - Licensed under CC0-1.0 (public domain).
+
+## Loaded-game tests (Tier 1)
+
+`src/test/java/net/critical/flight_display/LoadedGameTest.java` runs against a
+**real, bootstrapped Minecraft and a real Fabric loader**, not mocks.
+`net.fabricmc:fabric-loader-junit` stands the loader up inside the JUnit worker,
+so `SharedConstants.tryDetectVersion()` + `Bootstrap.bootStrap()` in `@BeforeAll`
+is legal and the assertions afterwards see genuinely loaded game data.
+
+What it checks that a headless test cannot:
+
+1. **The item registry is really populated** - a guard on the harness itself, so
+   the rest of the class can't pass vacuously.
+2. **A real loader discovers this mod** from the processed `fabric.mod.json`
+   (Stonecraft templating already applied), exactly as the game would.
+3. **Every `depends` range in `fabric.mod.json` is satisfiable in this cell.**
+   This is the real drift hazard of a Stonecutter matrix: a cell can build
+   perfectly against a Minecraft its own declared range no longer admits,
+   producing a jar that ships and then refuses to load. The loader resolves the
+   ranges per cell here.
+4. **The pitch ladder covers the pitch range the game can really produce**,
+   using vanilla's own `Mth.clamp` for the bounds rather than the test's idea
+   of them.
+
+Fabric cells only (`//? if fabric` wraps the file). NeoForge's equivalent
+bootstrap is ModDevGradle-only - see the junit-fml comment in `build.gradle.kts`.
+Verified green on all 4 Fabric cells (1.18.2, 1.19.4, 1.20.1, 1.21.4), 5 tests
+each, parsed from `versions/*/build/test-results/test/`.
+
+```bash
+./gradlew test --tests "*LoadedGameTest"
+```

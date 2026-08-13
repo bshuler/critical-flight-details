@@ -19,6 +19,10 @@ dependencies {
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    if (mod.isFabric) {
+        testImplementation("net.fabricmc:fabric-loader-junit:0.19.3")
+    }
 }
 
 // NeoForge's transitive net.neoforged.fancymodloader:junit-fml (<=9.0.18) auto-registers a
