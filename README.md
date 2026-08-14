@@ -75,6 +75,30 @@ Built jars land per version/loader under
 
 ---
 
+## Testing
+
+Three tiers, all run by CI ([build.yml](.github/workflows/build.yml)):
+
+1. **Unit tests + coverage gate** — JUnit 5 over the HUD layout/pitch math,
+   with a JaCoCo **100% line-coverage gate** enforced by `./gradlew check`.
+   Runs in every one of the 8 version×loader builds.
+2. **Loaded-game tests** (`fabric-loader-junit`) — a real bootstrapped
+   Minecraft and a real Fabric loader validate the processed mod metadata
+   and that the math agrees with live game values. All Fabric cells.
+3. **Client gametest** (`fabric-client-gametest-api-v1`, 1.21.4) — boots a
+   **real Minecraft client**, flies a real player on a real Elytra,
+   screenshots the frame, and asserts on the pixels: the pitch-ladder hash
+   rows must appear at the exact count and grid offset the current pitch
+   demands. This is the only tier that can see the HUD at all — before it
+   existed, deleting the mod's entire rendering left every other check
+   green. CI runs it headless (xvfb + software GL) and uploads the
+   screenshots as artifacts.
+
+Full write-up — including the negative controls and the rendering bugs the
+pixel assertions had to survive — is in [`PLAN.md`](PLAN.md).
+
+---
+
 ## Planned features
 
 - Allow the user to toggle the HUD utilities, both individually and as a
