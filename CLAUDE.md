@@ -94,8 +94,14 @@ critical-flight-details/
     │   └── assets/flight_display/
     │       ├── lang/en_us.json
     │       └── icon.png
-    └── test/java/net/critical/flight_display/
-        └── FlightHudMathTest.java     # Unit tests for the pure math
+    ├── test/java/net/critical/flight_display/
+    │   ├── FlightHudMathTest.java     # Unit tests for the pure math
+    │   └── LoadedGameTest.java        # Tier 1: real Fabric loader in the JUnit worker
+    └── gametest/                      # Tier 3: 1.21.4-fabric only, never shipped in any jar
+        ├── java/net/critical/flight_display/gametest/
+        │   └── FlightHudClientGameTest.java   # Boots a real client, flies, asserts on pixels
+        └── resources/
+            └── fabric.mod.json        # MANDATORY - declares the fabric-client-gametest entrypoint
 ```
 
 This mod is client-only (no server logic at all), so **everything lives under
@@ -271,6 +277,11 @@ matrix-wide task.
 See `PLAN.md` ("Phase 5: Test coverage") for the full writeup and exact
 coverage numbers.
 
+The two excluded classes are not covered by *this* gate, but they are no longer
+untested: the Tier 3 client gametest below exercises them against real pixels.
+Worth knowing why that matters - with the HUD registration deleted, so the mod
+draws nothing whatsoever, `check` is still fully green (measured, not assumed).
+
 ## Version Configuration
 
 Managed in `gradle.properties`:
@@ -343,3 +354,56 @@ each, parsed from `versions/*/build/test-results/test/`.
 ```bash
 ./gradlew test --tests "*LoadedGameTest"
 ```
+
+## Client gametests (Tier 3)
+
+`src/gametest/java/net/critical/flight_display/gametest/FlightHudClientGameTest.java`
+boots a **real Minecraft client with a real GL context**, flies a real player on
+a real Elytra, screenshots the frame, and reads the pixels back. It is the only
+tier that can observe `FlightDisplayClient` or `FlightHudRenderer` - the two
+classes excluded from JaCoCo above, which between them are the mod's entire
+user-visible behaviour.
+
+```bash
+./gradlew :1.21.4-fabric:runClientGameTest
+```
+
+**1.21.4-fabric only.** `fabric-client-gametest-api-v1` does not exist for the
+older Fabric cells, and NeoForge's equivalent is ModDevGradle-only. The
+`clientGameTestSupported` gate in `build.gradle.kts` keeps the source set out of
+the other seven cells entirely; a full `chiseledBuild` compiles it exactly once,
+and no shipped jar contains a gametest class.
+
+Three frames are asserted: grounded (**zero** HUD-red pixels in the ladder box),
+gliding at pitch -20 (12 hash rows, grid offset 0), gliding at pitch -25 (11 rows,
+offset -d/2). Asserting the grid *phase* as well as the count is what catches a
+ladder that renders but stops tracking pitch.
+
+Things to know before editing it:
+
+- **`src/gametest/resources/fabric.mod.json` is mandatory.** Without it the
+  client boots to the title screen, quits, and reports BUILD SUCCESSFUL having
+  tested nothing.
+- **Minecraft renders `0xFFFF0000` as two different pixel values**: `fill` quads
+  land exactly, `drawString` glyphs land as `0xFFFC0000`. The test uses a band
+  predicate (`A==255 && R>=0xF0 && G==0 && B==0`), which matches 0 pixels in a
+  whole grounded frame and 8164 in-box while flying. Do not "tighten" it back to
+  an exact match.
+- **Read the screenshot with `NativeImage`, not `javax.imageio`** - AWT
+  initialization inside a live LWJGL client is not safe on macOS. `getPixel`
+  returns ARGB.
+- **`TestServerContext#runCommand` swallows failures.** Verify every staging
+  command by its observable effect. It dispatches from world spawn, so wrap
+  position-relative commands in `execute as @p at @s run …`.
+- **Gliding must be started by pressing the real jump key**, in a retry loop -
+  vanilla `LocalPlayer` only sends `START_FALL_FLYING` on a fresh press.
+- **Never screenshot a control frame without `awaitLiveHudFrame` first.**
+  Minecraft renders no in-game HUD behind a screen, and a freshly created world
+  shows `ReceivingLevelScreen` ("Loading terrain…") for about a second. A
+  grounded control taken there cannot fail for any mod. This is not hypothetical:
+  it is the defect that let a negative control pass while the `isFallFlying()`
+  guard was deleted.
+
+CI runs it under xvfb with software GL as a separate `client-gametest` job,
+deliberately not gating the release artifacts. See PLAN.md ("Tier 3: client
+gametest") for the negative-control results and the full writeup.

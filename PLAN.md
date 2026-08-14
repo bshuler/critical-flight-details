@@ -383,6 +383,11 @@ Read from the JaCoCo XML report, not from whether the gate passes:
 A passing `check` means "no regression inside the analysed surface" — it does not
 mean the whole codebase is tested to that percentage.
 
+That is not a theoretical caveat. Deleting the mod's HUD registration outright —
+so it draws nothing at all — leaves `check` fully green: unit tests, Tier 1
+loaded tests, and this 100% gate all pass. Measured, not reasoned about; see
+"Tier 3: client gametest" below, which is the tier that catches it.
+
 ## Tier 1: loaded-game testing (added 2026-08-13)
 
 The coverage numbers above measure *headless* tests against pure logic. Until
@@ -414,3 +419,151 @@ window, no render pass, no player entity. `FlightDisplayClient` and
 
 **NeoForge cells have no equivalent** - not an oversight, NeoForge's loaded-test
 path is ModDevGradle-only. See the junit-fml comment in `build.gradle.kts`.
+
+## Tier 3: client gametest (added 2026-08-14)
+
+Tier 1 proved the mod *loads*. It could not prove the mod *draws*. This tier
+boots a real Minecraft client on a real GL context, flies a real player with a
+real Elytra, screenshots the frame, and reads the pixels back.
+
+`src/gametest/java/net/critical/flight_display/gametest/FlightHudClientGameTest.java`,
+on `fabric-client-gametest-api-v1` 4.1.1 via Loom's generated
+`runClientGameTest` task.
+
+```bash
+./gradlew :1.21.4-fabric:runClientGameTest
+```
+
+**Only 1.21.4-fabric is eligible.** `fabric-client-gametest-api-v1` does not
+exist for the three older Fabric cells, and the NeoForge equivalent needs
+ModDevGradle rather than Architectury Loom (same blocker as Tier 1). The
+`clientGameTestSupported` gate in `build.gradle.kts` is
+`mod.isFabric && stonecutter.eval(current.version, ">=1.21.4")`, so the other
+seven cells never see the source set. Verified: a full `chiseledBuild` runs
+`compileGametestJava` exactly once, in `1.21.4-fabric`, and all 8 shipped jars
+contain zero entries matching `gametest`.
+
+### What it asserts
+
+Three frames, in order:
+
+| Frame | State | Assertion |
+|---|---|---|
+| `0000_flight-hud-absent-grounded` | survival, on the ground, no screen | **zero** HUD-red pixels inside the ladder box |
+| `0001_flight-hud-visible-flying` | gliding, pitch -20 | 12 hash rows at grid offset 0 |
+| `0002_flight-hud-pitch-scrolled` | gliding, pitch -25 | 11 hash rows at grid offset -d/2 |
+
+The two flying frames are what make this more than a "did it crash" test. The
+ladder scrolls with pitch: `pitchOffset` is
+`(distanceBetweenHashes / 10) * (rawTruncatedPitch % 10)`, so pitch -20 gives
+offset 0 and pitch -25 gives offset -d/2. At offset 0, 12 marks fall inside
+`[top, bottom]`; at half a spacing, one falls out and 11 remain. Asserting both
+the *count* and the *grid phase* means the test fails if the ladder renders but
+stops responding to pitch - which a "some red pixels are present" check would
+happily pass.
+
+The test does not call `FlightHudMath.computeLayout` to decide where to look. It
+recomputes the thirds itself from the client's own gui dimensions, so a wrong
+`computeLayout` is caught rather than agreed with.
+
+### Reading the screenshot
+
+`ClientGameTestContext.takeScreenshot(String)` returns a `java.nio.file.Path`,
+so the test reads its own screenshot back with `NativeImage` (`getPixel` returns
+ARGB - bytecode-verified: it calls `getPixelABGR` then `ARGB.fromABGR`).
+`NativeImage` rather than `javax.imageio`, because AWT initialization inside a
+live LWJGL client is not safe on macOS.
+
+**Minecraft renders the same requested colour as two different pixel values.**
+`RED` in `FlightHudRenderer` is `0xFFFF0000`. A `guiGraphics.fill` quad lands as
+exactly `0xFFFF0000`. A `guiGraphics.drawString` glyph lands as `0xFFFC0000` -
+green and blue exactly 0, red 252 rather than 255. It is not alpha blending;
+there is no background leak. Because the "Speed:" readout draws on top of a hash
+mark, an exact match against `0xFFFF0000` measured that row at 82.5% coverage and
+dropped it, producing `expected 12 hash marks at pitch -20.0, found 11`.
+
+The fix is a band predicate rather than an exact match: `A == 255 && R >= 0xF0 &&
+G == 0 && B == 0`. That was validated empirically before being trusted - it
+matches **0 pixels in an entire grounded vanilla frame** (sky, terrain, hearts,
+hotbar and chat all miss it) and **8164 while flying, every one inside the ladder
+box**, in exactly those two shades. It is also the driver-independent choice,
+since the `0xFC` is a shader artifact that a software GL stack need not
+reproduce.
+
+Tolerance for a row's distance from its expected grid position is
+`max(3.0, hashSpacing * 0.4)`. A correct renderer's error budget is ~2.5px (int
+truncation at each `(int) layout.left()` fill call, plus run-centre rounding) and
+measured under 1px; a whole-spacing scroll is 14.5px and a half-spacing scroll
+7.3px, so 0.4 spacings clears the real error by 2x while still failing both
+scroll errors.
+
+### Staging
+
+Elytra flight has to be produced, not asserted into being:
+
+- `TestServerContext#runCommand` **swallows command failures**, so every staging
+  command is verified by its observable effect rather than by its return. It also
+  dispatches from world spawn, so position-relative commands are wrapped in
+  `execute as @p at @s run …`.
+- Gliding is started by holding the **real jump key** in a retry loop, because
+  vanilla `LocalPlayer` only sends `START_FALL_FLYING` on a fresh key press -
+  setting the flag directly would test the test, not the game.
+- `setUseConsistentSettings(true)` plus `guiScale = 2` in `modSettings` fixes the
+  gui dimensions, but the test still reads the real scale back off each
+  screenshot rather than assuming it.
+
+### Negative controls
+
+Three deliberate breakages, each run to confirm it fails with the right
+diagnosis, then reverted (`git diff --stat src/main/` empty afterwards):
+
+| Control | Break | Result |
+|---|---|---|
+| NC1 | delete the `HudRenderCallback` registration in `FlightDisplayClient` | fires - no HUD at all |
+| NC2 | delete the `isFallFlying()` guard in `FlightHudRenderer` | fires - `found 7956 HUD-red pixels inside the ladder box` on the grounded frame |
+| NC3 | zero out `pitchOffset` | fires - wrong grid phase |
+
+**NC2 initially did not fire, and that was a defect in the test, not in the
+mod.** After ruling out a stale build (`javap -c` confirmed the `isFallFlying`
+call was gone from the rebuilt class), reading screenshot 0000 by eye showed
+"Loading terrain…" - a `ReceivingLevelScreen`. Minecraft renders no in-game HUD
+behind a screen, so the grounded control was photographing a frame in which *no
+mod* could have drawn anything. It could not fail. The fix is `awaitLiveHudFrame`,
+which waits for `screen == null && level != null && player != null &&
+player.onGround()` before the control frame is taken. A negative control that
+cannot fail is worse than no control, because the suite looks stronger than it
+is.
+
+**The controls are not equally valuable.** NC3 is also caught by the unit tests
+(`pitchOffsetMatchesOriginalFormula` and
+`pitchOffsetPreservesJavaNegativeModuloBehavior` both fail: 19 tests, 2 failures),
+so its role here is proving the math reaches *pixels*. NC1 and NC2 are the ones
+invisible to every other tier.
+
+### The coverage gap, demonstrated
+
+With NC1 applied - the mod registering no HUD renderer at all, drawing literally
+nothing - `./gradlew :1.21.4-fabric:check` was **BUILD SUCCESSFUL**. Unit tests
+green, Tier 1 loaded tests green, the 100% JaCoCo line-coverage gate green. This
+is the concrete meaning of the exclusion list under "Coverage in context": the
+two excluded classes are the entire user-visible behaviour of the mod, and until
+this tier nothing in CI could tell whether they worked.
+
+### CI
+
+`.github/workflows/build.yml` gains a `client-gametest` job: xvfb plus a software
+GL stack (`LIBGL_ALWAYS_SOFTWARE=true`, `MESA_GL_VERSION_OVERRIDE=3.3`), a fixed
+`1920x1080x24` virtual screen, and an `if: always()` upload of the screenshots and
+logs - those artifacts are most useful precisely when the run failed, since the
+assertion messages quote pixel coordinates.
+
+It is deliberately a **separate job and not a gate on the release artifacts**: a
+flake in a software GL stack should not withhold jars that compiled and passed
+every headless test.
+
+### Tier 4 (NeoForge `testframework`) remains blocked
+
+NeoForge's own gametest framework is ModDevGradle-only. This repo builds NeoForge
+through Architectury Loom (via Stonecraft), so there is no supported path to it
+without splitting the NeoForge cell out of the Stonecutter matrix onto a separate
+toolchain. Documented as blocked rather than attempted.

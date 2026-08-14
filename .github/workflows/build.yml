@@ -43,3 +43,72 @@ jobs:
           name: critical-flight-details-${{ github.sha }}
           path: release-jars/*.jar
           retention-days: 14
+
+  # Tier 3. Boots a real Minecraft client on a virtual X display, flies a real
+  # player with a real Elytra, and asserts on the pixels of the screenshots it
+  # takes. This is the only job that can observe FlightDisplayClient's HUD
+  # registration or FlightHudRenderer's isFallFlying() guard - both are excluded
+  # from JaCoCo, and the `build` job above stays entirely green when either one is
+  # deleted (verified, not assumed).
+  #
+  # Only 1.21.4-fabric is eligible: fabric-client-gametest-api-v1 does not exist for
+  # the three older Fabric cells, and the NeoForge equivalent needs ModDevGradle
+  # rather than Architectury Loom. One cell, so no matrix.
+  #
+  # Deliberately a separate job and NOT a gate on the artifacts above: a flake in a
+  # software GL stack should not withhold jars that compiled and passed every
+  # headless test.
+  client-gametest:
+    name: Client gametest (1.21.4-fabric)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # xvfb gives GLFW a display to open a window on; the mesa packages give it a
+      # software GL implementation, since GitHub runners have no GPU. The libx*
+      # packages are GLFW's own runtime dependencies - it dlopens them and fails at
+      # window creation, not at link time, if they are missing.
+      - name: Install a virtual display and software GL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb libgl1 libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers \
+            libxi6 libxxf86vm1 libxrandr2 libxcursor1 libxinerama1 libxext6
+
+      # The window size is fixed here because it decides the gui-scaled dimensions,
+      # and those decide where the ladder is drawn. The test reads the real scale
+      # back off each screenshot rather than assuming it, so this is about
+      # reproducibility, not correctness.
+      - name: Run the client gametest
+        env:
+          LIBGL_ALWAYS_SOFTWARE: 'true'
+          MESA_GL_VERSION_OVERRIDE: '3.3'
+        run: |
+          xvfb-run -a --server-args="-screen 0 1920x1080x24" \
+            ./gradlew :1.21.4-fabric:runClientGameTest --stacktrace
+
+      # if: always() because the screenshots are most useful precisely when the run
+      # failed - the assertion messages quote pixel coordinates, and these are the
+      # pixels they are quoting.
+      - name: Upload gametest screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-gametest-1.21.4-fabric-${{ github.sha }}
+          path: |
+            versions/1.21.4-fabric/build/run/clientGameTest/screenshots/**
+            versions/1.21.4-fabric/build/run/clientGameTest/logs/**
+          retention-days: 14
