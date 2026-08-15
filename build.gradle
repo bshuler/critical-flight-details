@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.4-SNAPSHOT'
+	id 'fabric-loom' version '1.9-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -10,29 +10,26 @@ archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
-minecraft {
-}
-
 dependencies {
-	minecraft "com.mojang:minecraft:1.16.1"
-	mappings "net.fabricmc:yarn:1.16.1+build.9:v2"
+	minecraft "com.mojang:minecraft:1.21.4"
+	mappings "net.fabricmc:yarn:1.21.4+build.8"
 	modImplementation "net.fabricmc:fabric-loader:0.8.8+build.202"
 
 	//Fabric api
-	modImplementation "net.fabricmc.fabric-api:fabric-api:0.14.0+build.371-1.16"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:0.114.3+1.21.4"
 }
 
 processResources {
 	inputs.property "version", project.version
 
-	from(sourceSets.main.resources.srcDirs) {
-		include "fabric.mod.json"
-		expand "version": project.version
-	}
+//	from(sourceSets.main.resources.srcDirs) {
+//		include "fabric.mod.json"
+//		expand "version": project.version
+//	}
 
-	from(sourceSets.main.resources.srcDirs) {
-		exclude "fabric.mod.json"
-	}
+//	from(sourceSets.main.resources.srcDirs) {
+//		exclude "fabric.mod.json"
+//	}
 }
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
@@ -46,7 +43,7 @@ tasks.withType(JavaCompile) {
 // if it is present.
 // If you remove this task, sources will not be generated.
 task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier = "sources"
+	//classifier = "sources"
 	from sourceSets.main.allSource
 }
 

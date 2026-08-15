@@ -11,6 +11,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderTickCounter;
 
 @Environment(EnvType.CLIENT)
 @Mixin(value = InGameHud.class)
@@ -26,17 +28,17 @@ public abstract class GameInfoMixin {
         // Start Mixin
         System.out.println("Init Coordinates Mixin");
         this.hudInfo = new FlightDisplayHud(client);
-
+//        addDrawableChild(this.hudInfo);
     }
 
-    @Inject(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/options/GameOptions;hudHidden:Z", ordinal = 2))
-    private void onDraw(CallbackInfo ci) {
-
+//    @Inject(method = "METHOD NAME OR SIGNATURE", at = @At("INJECTION POINT REFERENCE"))
+    //Inject into renderMainHud so overlay can be hidden when the hud is hidden
+    @Inject(method = "renderMainHud", at = @At(value = "HEAD"))
+    private void onDraw(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         MinecraftClient minecraftClient = MinecraftClient.getInstance();
-
         if (minecraftClient.player != null) {
-            if (minecraftClient.player.isFallFlying()) {
-                this.hudInfo.draw();
+            if (minecraftClient.player.isGliding()) {
+                this.hudInfo.draw(context);
             }
         }
     }

@@ -5,14 +5,24 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Drawable;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
 
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.MatrixStack.Entry;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.gl.ShaderProgramKeys;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.client.render.RenderLayer;
+
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
+import net.minecraft.util.Colors;
 import java.awt.Color;
 import java.lang.Math;
 
@@ -33,7 +43,7 @@ public class FlightDisplayHud implements Drawable {
         this.fontRenderer = client.textRenderer;
     }
 
-    public void draw() {
+    public void draw(DrawContext context) {
 
         int height = client.getWindow().getScaledHeight();
         int width = client.getWindow().getScaledWidth();
@@ -57,15 +67,21 @@ public class FlightDisplayHud implements Drawable {
         double pitch_offset = (distance_between_hashes / 10) * (display_pitch % 10);
 
         int lineHeight = this.fontRenderer.fontHeight + 2;
-        MatrixStack matrixStack = new MatrixStack();
-        this.fontRenderer.draw(matrixStack, String.format("Pitch: %s", (int) this.player.getPitch(0)*-1), (float) left+10, (float) middle_height, Color.RED.getRGB());
-        this.fontRenderer.draw(matrixStack, String.format("Speed: %s", (int) this.speed ), (float) left+10, (float) bottom, Color.RED.getRGB());
+
+        context.drawText(this.client.textRenderer, String.format("Pitch: %s", (float) this.player.getPitch(0)*-1), (int) left+10, (int) middle_height, Color.RED.getRGB(), false);
+        context.drawText(this.client.textRenderer, String.format("Speed: %s", (float) this.speed ), (int) left+10, (int) bottom, Color.RED.getRGB(), false);
+
+        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
 
         for(double hash_y = top; hash_y <= bottom + distance_between_hashes; hash_y = hash_y + distance_between_hashes) {
             double hash_y_offset = hash_y + pitch_offset;
             if (hash_y_offset >= top) {
                 if (hash_y_offset <= bottom) {
-                    drawLine(left - 10, hash_y + pitch_offset, left, hash_y + pitch_offset, Color.RED);
+                    context.drawHorizontalLine(
+                        (int)(left - 10),
+                        (int)left,
+                        (int)(hash_y + pitch_offset),
+                        Colors.RED);
                 }
             }
         }
@@ -74,8 +90,16 @@ public class FlightDisplayHud implements Drawable {
 //        this.fontRenderer.draw( String.format("%s %s %s",  (int) client.player.getX(), (int) client.player.getY(), (int) client.player.getZ()), (float) left+10, (float) bottom+(lineHeight*2), Color.RED.getRGB());
 //        this.fontRenderer.draw( String.format("%s",  client.world.getTime()), (float) left+10, (float) bottom+(lineHeight*3), Color.RED.getRGB());
 
-        drawLine(left, top, left, bottom, Color.RED);
-        drawLine(right, top, right, bottom, Color.GREEN);
+         context.drawVerticalLine(
+            (int)left,
+            (int)top,
+            (int) bottom,
+            Colors.RED);
+        context.drawVerticalLine(
+            (int)right,
+            (int)top,
+            (int)bottom,
+            Colors.GREEN);
 
         if (client.world.getTime() > this.last_time+10) {
             double distance = (Math.pow(client.player.getX() -  this.last_x, 2) + Math.pow(client.player.getY() -  this.last_y, 2) + Math.pow(client.player.getZ() -  this.last_z, 2)) * 0.5;
@@ -86,20 +110,16 @@ public class FlightDisplayHud implements Drawable {
             this.last_y = client.player.getY();
             this.last_z = client.player.getZ();
         }
-
-        this.client.getProfiler().pop();
-    }
-
-    private void drawLine(double x1, double y1, double x2, double y2, Color c) {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_LINES, VertexFormats.POSITION_COLOR);
-        buffer.vertex((double) x1, (double) y1, (double) 1).color(c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha()).next();
-        buffer.vertex((double) x2, (double) y2, (double) 1).color(c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha()).next();
-        tessellator.draw();
     }
 
     @Override
-    public void render(MatrixStack matrixstack, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+                MinecraftClient minecraftClient = MinecraftClient.getInstance();
+
+        if (minecraftClient.player != null) {
+            if (minecraftClient.player.isGliding()) {
+                this.draw(context);
+            }
+        }
     }
 }
