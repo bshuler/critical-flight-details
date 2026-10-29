@@ -105,7 +105,7 @@ Every other cell (Fabric on all 4; NeoForge on 1.21.4; Forge on 1.20.1/
 
 ### One-jar-per-version investigation: Forgix
 
-Bert asked to investigate merging each Minecraft version's per-loader jars
+Human asked to investigate merging each Minecraft version's per-loader jars
 into a single "works on all loaders" jar via the
 [Forgix](https://github.com/PacifistMC/Forgix) Gradle plugin.
 
