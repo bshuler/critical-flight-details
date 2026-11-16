@@ -35,9 +35,12 @@ public final class FlightHudMath {
     }
 
     /**
+     * Layout metrics for the flight HUD: a red left rail, 10px left-side hash
+     * marks along {@code [left - 10, left]}, and a green right rail.
+     *
      * @param top                   y of the top of the pitch ladder
-     * @param left                  x of the left rail (and left edge of hash marks)
-     * @param right                 x of the right rail
+     * @param left                  x of the left rail (and right edge of 10px left-side hash marks)
+     * @param right                 x of the green right rail
      * @param bottom                y of the bottom of the pitch ladder
      * @param middleHeight          vertical screen center, used for the pitch text row
      * @param heightOfDisplay       {@code bottom - top}

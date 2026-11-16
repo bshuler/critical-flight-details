@@ -65,8 +65,18 @@ public class FlightHudClientGameTest implements FabricClientGameTest {
 				&& (argb & 0xFF) == 0;
 	}
 
+	private static boolean isHudGreen(int argb) {
+		return ((argb >>> 24) & 0xFF) == 0xFF
+				&& ((argb >> 16) & 0xFF) == 0
+				&& ((argb >> 8) & 0xFF) >= 0xF0
+				&& (argb & 0xFF) == 0;
+	}
+
 	/** Mirrors FlightHudMath.NUMBER_OF_HASHES, restated so the test is not circular. */
 	private static final int NUMBER_OF_HASHES = 11;
+
+	/** Width in GUI pixels of each left-side pitch hash mark ({@code [left - 10, left]}). */
+	private static final int HASH_WIDTH = 10;
 
 	/**
 	 * Altitude to glide from. The overworld build limit is 320 and teleporting above
@@ -124,14 +134,15 @@ public class FlightHudClientGameTest implements FabricClientGameTest {
 			// that drew its HUD unconditionally.
 			Ladder grounded = measureLadder(context, context.takeScreenshot("flight-hud-absent-grounded"));
 
-			if (grounded.redPixelsInBox() != 0) {
+			if (grounded.redPixelsInBox() != 0 || grounded.greenPixelsInBox() != 0) {
 				throw new AssertionError(String.format(Locale.ROOT,
 						"the pitch ladder is being drawn while the player is standing on the ground and "
-								+ "not Elytra-flying: found %d HUD-red pixels inside the ladder box "
+								+ "not Elytra-flying: found %d HUD-red and %d HUD-green pixels inside the ladder box "
 								+ "(%d,%d)-(%d,%d). FlightHudRenderer's isFallFlying() guard is the "
 								+ "suspect - every 'HUD is visible' assertion after this point would "
 								+ "pass for a HUD that is simply always on.",
-						grounded.redPixelsInBox(), grounded.boxLeft(), grounded.boxTop(),
+						grounded.redPixelsInBox(), grounded.greenPixelsInBox(),
+						grounded.boxLeft(), grounded.boxTop(),
 						grounded.boxRight(), grounded.boxBottom()));
 			}
 
@@ -269,33 +280,43 @@ public class FlightHudClientGameTest implements FabricClientGameTest {
 
 		Ladder ladder = measureLadder(context, context.takeScreenshot(screenshotName));
 
-		if (ladder.redPixelsInBox() == 0) {
+		if (ladder.redPixelsInBox() == 0 && ladder.greenPixelsInBox() == 0) {
 			throw new AssertionError(String.format(Locale.ROOT,
 					"no part of the pitch ladder was drawn while the player was genuinely Elytra-gliding "
-							+ "at pitch %.1f. Not one HUD-red pixel appeared inside the ladder box. "
+							+ "at pitch %.1f. Not one HUD-red or HUD-green pixel appeared inside the ladder box. "
 							+ "The HUD callback registration in FlightDisplayClient is the first suspect: "
 							+ "if HudRenderCallback.EVENT.register is never reached, FlightHudRenderer is "
 							+ "never called and everything else in this repo still passes.",
 					pitch));
 		}
 
-		// Two vertical rails, at the 1/3 and 2/3 x-marks. Computed here from the gui
-		// dimensions directly rather than by calling FlightHudMath, so that a wrong
-		// computeLayout cannot agree with itself and pass.
-		List<Run> rails = ladder.railColumns();
-
-		if (rails.size() != 2) {
+		// One red left vertical rail at 1/3 x and one green right vertical rail at 2/3 x.
+		// Computed here from the gui dimensions directly rather than by calling FlightHudMath,
+		// so that a wrong computeLayout cannot agree with itself and pass.
+		List<Run> redRails = ladder.redRailColumns();
+		if (redRails.size() != 1) {
 			throw new AssertionError(String.format(Locale.ROOT,
-					"expected exactly 2 vertical rails at pitch %.1f, found %d at %s. A rail is a column "
-							+ "of HUD red spanning at least %.0f%% of the ladder's height; the ladder box "
-							+ "is (%d,%d)-(%d,%d) in a %dx%d screenshot.",
-					pitch, rails.size(), rails, SPAN_FRACTION * 100,
+					"expected exactly 1 red left vertical rail at pitch %.1f, found %d at %s. A rail is "
+							+ "a column of HUD red spanning at least %.0f%% of the ladder's height; the "
+							+ "ladder box is (%d,%d)-(%d,%d) in a %dx%d screenshot.",
+					pitch, redRails.size(), redRails, SPAN_FRACTION * 100,
 					ladder.boxLeft(), ladder.boxTop(), ladder.boxRight(), ladder.boxBottom(),
 					ladder.imageWidth(), ladder.imageHeight()));
 		}
 
-		assertNear("left rail", pitch, rails.get(0).centre(), ladder.boxLeft(), ladder.tolerance());
-		assertNear("right rail", pitch, rails.get(1).centre(), ladder.boxRight(), ladder.tolerance());
+		List<Run> greenRails = ladder.greenRailColumns();
+		if (greenRails.size() != 1) {
+			throw new AssertionError(String.format(Locale.ROOT,
+					"expected exactly 1 green right vertical rail at pitch %.1f, found %d at %s. A rail is "
+							+ "a column of HUD green spanning at least %.0f%% of the ladder's height; the "
+							+ "ladder box is (%d,%d)-(%d,%d) in a %dx%d screenshot.",
+					pitch, greenRails.size(), greenRails, SPAN_FRACTION * 100,
+					ladder.boxLeft(), ladder.boxTop(), ladder.boxRight(), ladder.boxBottom(),
+					ladder.imageWidth(), ladder.imageHeight()));
+		}
+
+		assertNear("left rail", pitch, redRails.get(0).centre(), ladder.boxLeft(), ladder.tolerance());
+		assertNear("right rail", pitch, greenRails.get(0).centre(), ladder.boxRight(), ladder.tolerance());
 
 		// The hash marks, and where the pitch offset has scrolled them to.
 		List<Run> hashes = ladder.hashRows();
@@ -376,33 +397,45 @@ public class FlightHudClientGameTest implements FabricClientGameTest {
 			double bottom = (guiHeight / 3.0) * 2.0 * scale;
 			double spacing = (bottom - top) / NUMBER_OF_HASHES;
 
-			int x0 = clamp((int) Math.floor(left) - 2, 0, width - 1);
+			int x0 = clamp((int) Math.floor(left - HASH_WIDTH * scale) - 2, 0, width - 1);
 			int x1 = clamp((int) Math.ceil(right) + 2, 0, width - 1);
 			int y0 = clamp((int) Math.floor(top) - 2, 0, height - 1);
 			int y1 = clamp((int) Math.ceil(bottom) + 2, 0, height - 1);
 
-			int[] perColumn = new int[width];
-			int[] perRow = new int[height];
-			int total = 0;
+			int hashX0 = clamp((int) Math.floor((Math.floor(guiWidth / 3.0) - HASH_WIDTH) * scale), 0, width - 1);
+			int hashX1 = clamp((int) Math.floor(Math.floor(guiWidth / 3.0) * scale), 0, width - 1);
+
+			int[] perRedColumn = new int[width];
+			int[] perGreenColumn = new int[width];
+			int[] perHashRow = new int[height];
+			int totalRed = 0;
+			int totalGreen = 0;
 
 			for (int y = y0; y <= y1; y++) {
 				for (int x = x0; x <= x1; x++) {
 					// getPixel returns ARGB on this version - verified by bytecode, it
 					// calls ARGB.fromABGR on the raw buffer. Do not swap the channels.
-					if (isHudRed(image.getPixel(x, y))) {
-						perColumn[x]++;
-						perRow[y]++;
-						total++;
+					int argb = image.getPixel(x, y);
+					if (isHudRed(argb)) {
+						perRedColumn[x]++;
+						if (x >= hashX0 && x < hashX1) {
+							perHashRow[y]++;
+						}
+						totalRed++;
+					} else if (isHudGreen(argb)) {
+						perGreenColumn[x]++;
+						totalGreen++;
 					}
 				}
 			}
 
 			int minRun = (int) Math.round(scale) + 1;
-			List<Run> rails = findRuns(perColumn, (int) ((bottom - top) * SPAN_FRACTION), minRun);
-			List<Run> hashes = findRuns(perRow, (int) ((right - left) * SPAN_FRACTION), minRun);
+			List<Run> redRails = findRuns(perRedColumn, (int) ((bottom - top) * SPAN_FRACTION), minRun);
+			List<Run> greenRails = findRuns(perGreenColumn, (int) ((bottom - top) * SPAN_FRACTION), minRun);
+			List<Run> hashes = findRuns(perHashRow, (int) ((hashX1 - hashX0) * SPAN_FRACTION), minRun);
 
 			return new Ladder(width, height, (int) left, (int) top, (int) right, (int) bottom,
-					spacing, scale, total, rails, hashes);
+					spacing, scale, totalRed, totalGreen, redRails, greenRails, hashes);
 		} catch (IOException e) {
 			throw new AssertionError("could not read back the screenshot at " + screenshot, e);
 		}
@@ -461,8 +494,8 @@ public class FlightHudClientGameTest implements FabricClientGameTest {
 			int imageWidth, int imageHeight,
 			int boxLeft, int boxTop, int boxRight, int boxBottom,
 			double hashSpacing, double scale,
-			int redPixelsInBox,
-			List<Run> railColumns, List<Run> hashRows
+			int redPixelsInBox, int greenPixelsInBox,
+			List<Run> redRailColumns, List<Run> greenRailColumns, List<Run> hashRows
 	) {
 		/**
 		 * Two fifths of a hash spacing, with a floor for very small windows.
