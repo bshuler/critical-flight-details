@@ -29,6 +29,7 @@ stonecutter {
         // Loader coverage mandate: Fabric + NeoForge for 1.20.5+,
         // Fabric + Forge for <=1.20.4. Every viable loader cell is built -
         // see PLAN.md "Target Matrix" for the exact blockers on skipped cells.
+        mc("26.3", "fabric", "neoforge")
         mc("1.21.4", "fabric", "neoforge")
         mc("1.20.1", "fabric", "forge")
         mc("1.19.4", "fabric", "forge")

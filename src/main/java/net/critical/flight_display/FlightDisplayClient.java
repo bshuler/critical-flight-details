@@ -4,7 +4,12 @@ import net.critical.flight_display.hud.FlightHudRenderer;
 
 //? if fabric {
 import net.fabricmc.api.ClientModInitializer;
+//? if >=26.1 {
+/*import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.minecraft.resources.Identifier;
+*///?} else {
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+//?}
 //?} elif neoforge {
 /*import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -36,7 +41,11 @@ public final class FlightDisplayClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        //? if >=26.1 {
+        /*HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(MOD_ID, "hud"), FlightHudRenderer::onHudRender);
+        *///?} else {
         HudRenderCallback.EVENT.register(FlightHudRenderer::onHudRender);
+        //?}
     }
 }
 //?} elif neoforge {

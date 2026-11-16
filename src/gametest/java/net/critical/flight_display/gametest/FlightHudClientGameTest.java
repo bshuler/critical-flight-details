@@ -188,7 +188,11 @@ public class FlightHudClientGameTest implements FabricClientGameTest {
 	 */
 	private static void awaitLiveHudFrame(ClientGameTestContext context) {
 		try {
+			//? if >=26.3 {
+			/*context.waitFor(client -> !client.isPaused()
+			*///?} else {
 			context.waitFor(client -> client.screen == null
+			//?}
 					&& client.level != null
 					&& client.player != null
 					&& client.player.onGround());

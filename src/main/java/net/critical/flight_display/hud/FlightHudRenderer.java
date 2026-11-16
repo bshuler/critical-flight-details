@@ -17,10 +17,17 @@ import net.minecraft.client.gui.GuiComponent;
 *///?} elif fabric && <1.21 {
 /*import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
+*///?} elif fabric && >=26.1 {
+/*import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 *///?} elif fabric {
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
-//?} elif neoforge {
+//?} elif neoforge && >=26.1 {
+/*import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
+*///?} elif neoforge {
 /*import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
@@ -115,7 +122,11 @@ public final class FlightHudRenderer {
         guiGraphics.drawString(client.font, "Speed: " + speedSample.speed(), (int) layout.left(), (int) layout.middleHeight() - 10, RED, false);
     }
     *///?} elif fabric {
+    //? if >=26.1 {
+    /*public static void onHudRender(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker) {
+    *///?} else {
     public static void onHudRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
+    //?}
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         if (player == null || !player.isFallFlying()) {
@@ -141,8 +152,13 @@ public final class FlightHudRenderer {
             guiGraphics.fill((int) layout.left(), (int) y, (int) layout.right() + 1, (int) y + 1, RED);
         }
 
+        //? if >=26.1 {
+        /*guiGraphics.text(client.font, "Pitch: " + displayPitch, (int) layout.left(), (int) layout.middleHeight() - 20, RED, false);
+        guiGraphics.text(client.font, "Speed: " + speedSample.speed(), (int) layout.left(), (int) layout.middleHeight() - 10, RED, false);
+        *///?} else {
         guiGraphics.drawString(client.font, "Pitch: " + displayPitch, (int) layout.left(), (int) layout.middleHeight() - 20, RED, false);
         guiGraphics.drawString(client.font, "Speed: " + speedSample.speed(), (int) layout.left(), (int) layout.middleHeight() - 10, RED, false);
+        //?}
     }
     //?} elif neoforge {
     /*public static void onRenderGuiPost(RenderGuiEvent.Post event) {
@@ -152,7 +168,7 @@ public final class FlightHudRenderer {
             return;
         }
 
-        GuiGraphics guiGraphics = event.getGuiGraphics();
+        var guiGraphics = event.getGuiGraphics();
         int scaledWidth = client.getWindow().getGuiScaledWidth();
         int scaledHeight = client.getWindow().getGuiScaledHeight();
         Layout layout = FlightHudMath.computeLayout(scaledWidth, scaledHeight);
@@ -172,8 +188,13 @@ public final class FlightHudRenderer {
             guiGraphics.fill((int) layout.left(), (int) y, (int) layout.right() + 1, (int) y + 1, RED);
         }
 
+        //? if >=26.1 {
+        guiGraphics.text(client.font, "Pitch: " + displayPitch, (int) layout.left(), (int) layout.middleHeight() - 20, RED, false);
+        guiGraphics.text(client.font, "Speed: " + speedSample.speed(), (int) layout.left(), (int) layout.middleHeight() - 10, RED, false);
+        //?} else {
         guiGraphics.drawString(client.font, "Pitch: " + displayPitch, (int) layout.left(), (int) layout.middleHeight() - 20, RED, false);
         guiGraphics.drawString(client.font, "Speed: " + speedSample.speed(), (int) layout.left(), (int) layout.middleHeight() - 10, RED, false);
+        //?}
     }
     *///?} elif forge && <1.19 {
     /*public static void renderLegacyOverlay(ForgeIngameGui gui, PoseStack poseStack, float partialTick, int width, int height) {
