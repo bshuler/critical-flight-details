@@ -54,20 +54,13 @@ consequence:
   published a release since **2025-12-16** - before `26.1` (2026-03-14) or
   `26.2` (2026-06-15) existed. It has no knowledge of the new version line.
 
-### Decision
+### Decision (updated 2026-11-16)
 
-The buildable target matrix in this repo mirrors `critical-orientation`'s
-proven matrix exactly, topping out at **1.21.4** (Fabric + NeoForge) rather
-than the literal newest stable release (`26.2`). This is the same kind of
-documented, evidence-based fallback the task brief explicitly allows for
-loader infeasibility ("If NeoForge/Forge ports are infeasible... Fabric-only
-is acceptable"), applied one level up: here the *whole current toolchain*
-(Stonecutter+Stonecraft, pinned to older Architectury Loom) cannot target
-`26.x` for **any** loader yet, not just NeoForge/Forge.
-
-A plain (non-Stonecraft, non-Architectury) Fabric-only probe against `26.2`
-using bare `fabric-loom` 1.17 was attempted separately as a stretch goal -
-see "Appendix: 26.2 probe" below for the outcome.
+Updated to match `critical-orientation`'s full 19-version (38-cell) matrix from
+`1.18.2` through `26.3` (Fabric + Forge for `<=1.20.4`, Fabric + NeoForge for
+`>=1.20.6`) using Stonecutter `0.9.+`, Stonecraft `1.12.+`, and Gradle
+`foojay-resolver-convention` `1.0.0` toolchains. All 38 cells build and pass
+`./gradlew chiseledBuild` and `./gradlew test`.
 
 ---
 
@@ -83,10 +76,25 @@ so Quilt compatibility is documented (README.md/CLAUDE.md) rather than built.
 
 | Minecraft Version | Fabric | NeoForge | Forge | Status |
 |--------------------|--------|----------|-------|--------|
-| 1.21.4             | ✅      | ✅        | ❌     | ☐ |
-| 1.20.1             | ✅      | ❌        | ✅     | ☐ |
-| 1.19.4             | ✅      | ❌        | ✅     | ☐ |
-| 1.18.2             | ✅      | ❌        | ✅     | ☐ |
+| 26.3               | ✅      | ✅        | ❌     | ✅ |
+| 26.2               | ✅      | ✅        | ❌     | ✅ |
+| 26.1.2             | ✅      | ✅        | ❌     | ✅ |
+| 26.1.1             | ✅      | ✅        | ❌     | ✅ |
+| 26.1               | ✅      | ✅        | ❌     | ✅ |
+| 1.21.11            | ✅      | ✅        | ❌     | ✅ |
+| 1.21.10            | ✅      | ✅        | ❌     | ✅ |
+| 1.21.9             | ✅      | ✅        | ❌     | ✅ |
+| 1.21.8             | ✅      | ✅        | ❌     | ✅ |
+| 1.21.7             | ✅      | ✅        | ❌     | ✅ |
+| 1.21.6             | ✅      | ✅        | ❌     | ✅ |
+| 1.21.5             | ✅      | ✅        | ❌     | ✅ |
+| 1.21.4             | ✅      | ✅        | ❌     | ✅ |
+| 1.21.1             | ✅      | ✅        | ❌     | ✅ |
+| 1.20.6             | ✅      | ✅        | ❌     | ✅ |
+| 1.20.4             | ✅      | ❌        | ✅     | ✅ |
+| 1.20.1             | ✅      | ❌        | ✅     | ✅ |
+| 1.19.4             | ✅      | ❌        | ✅     | ✅ |
+| 1.18.2             | ✅      | ❌        | ✅     | ✅ |
 
 Exact blockers for the ❌ cells (not a choice to skip — the loader/API does
 not exist for that version):

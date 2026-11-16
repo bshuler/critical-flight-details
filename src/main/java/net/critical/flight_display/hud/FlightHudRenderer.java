@@ -24,12 +24,10 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
 //?} elif neoforge && >=26.1 {
-/*import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 *///?} elif neoforge {
-/*import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphics;
+/*import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 *///?} elif forge && <1.19 {
 /*import com.mojang.blaze3d.vertex.PoseStack;

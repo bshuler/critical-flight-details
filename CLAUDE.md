@@ -26,7 +26,22 @@ blockers" list), never by choice.
 
 | Minecraft Version | Fabric | NeoForge | Forge |
 |--------------------|--------|----------|-------|
+| 26.3               | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 26.2               | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 26.1.2             | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 26.1.1             | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 26.1               | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 1.21.11            | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 1.21.10            | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 1.21.9             | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 1.21.8             | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 1.21.7             | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 1.21.6             | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 1.21.5             | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
 | 1.21.4             | ✅      | ✅        | ❌ (Forge's `IGuiOverlay` API is gone by 1.20.5+, and 1.20.5+ is NeoForge's lane) |
+| 1.21.1             | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 1.20.6             | ✅      | ✅        | ❌ (1.20.5+ is NeoForge's lane) |
+| 1.20.4             | ✅      | ❌        | ✅ (≤1.20.4 is Forge's lane) |
 | 1.20.1             | ✅      | ❌        | ✅ (≤1.20.4 is Forge's lane) |
 | 1.19.4             | ✅      | ❌        | ✅ (≤1.20.4 is Forge's lane) |
 | 1.18.2             | ✅      | ❌        | ✅ (≤1.20.4 is Forge's lane) |
@@ -45,12 +60,10 @@ because Forgix's auto-detection expects subprojects named `fabric`/`forge`/
 ("One-jar-per-version investigation: Forgix" / "Appendix: Forgix outcome")
 for the full writeup and attempt result.
 
-This mirrors the sibling `critical-orientation` mod's matrix exactly. See
-`PLAN.md` for why the *actual* newest stable Minecraft version (`26.2`, per
-`https://meta.fabricmc.net/v2/versions/game`) is documented but **not** part
-of the buildable matrix yet — the mapping/toolchain ecosystem this project
-depends on (Stonecraft → Architectury Loom) does not yet support Minecraft's
-post-obfuscation versioning line (`26.1`+).
+This mirrors the sibling `critical-orientation` mod's full 19-version (38-cell)
+matrix from `1.18.2` through `26.3`, using Gradle Java toolchains
+(`foojay-resolver-convention` `1.0.0`: Java 17 for `< 1.20.6`, Java 21 for
+`1.20.6`–`1.21.11`, Java 25 for `26.1+`).
 
 ## Tech Stack
 

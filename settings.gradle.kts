@@ -13,6 +13,7 @@ pluginManagement {
 }
 
 plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
     id("gg.meza.stonecraft") version "1.12.+"
     id("dev.kikugie.stonecutter") version "0.9.+"
 }
@@ -27,10 +28,23 @@ stonecutter {
         }
 
         // Loader coverage mandate: Fabric + NeoForge for 1.20.5+,
-        // Fabric + Forge for <=1.20.4. Every viable loader cell is built -
-        // see PLAN.md "Target Matrix" for the exact blockers on skipped cells.
+        // Fabric + Forge for <=1.20.4.
         mc("26.3", "fabric", "neoforge")
+        mc("26.2", "fabric", "neoforge")
+        mc("26.1.2", "fabric", "neoforge")
+        mc("26.1.1", "fabric", "neoforge")
+        mc("26.1", "fabric", "neoforge")
+        mc("1.21.11", "fabric", "neoforge")
+        mc("1.21.10", "fabric", "neoforge")
+        mc("1.21.9", "fabric", "neoforge")
+        mc("1.21.8", "fabric", "neoforge")
+        mc("1.21.7", "fabric", "neoforge")
+        mc("1.21.6", "fabric", "neoforge")
+        mc("1.21.5", "fabric", "neoforge")
         mc("1.21.4", "fabric", "neoforge")
+        mc("1.21.1", "fabric", "neoforge")
+        mc("1.20.6", "fabric", "neoforge")
+        mc("1.20.4", "fabric", "forge")
         mc("1.20.1", "fabric", "forge")
         mc("1.19.4", "fabric", "forge")
         mc("1.18.2", "fabric", "forge")
